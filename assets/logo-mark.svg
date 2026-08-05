@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="emPower+">
+  <!-- Medical cross built from two overlapping rounded bars, with a leaf sprouting
+       from the upper-right quadrant. Single flat colour so it works as a favicon. -->
+  <g fill="#2cc36b">
+    <rect x="7.4" y="6.6" width="5.2" height="14.8" rx="2.6"/>
+    <rect x="2.6" y="11.4" width="14.8" height="5.2" rx="2.6"/>
+    <path d="M21.6 2.4a7.6 7.6 0 0 1-7.6 7.6 7.6 7.6 0 0 1 7.6-7.6z"/>
+  </g>
+</svg>

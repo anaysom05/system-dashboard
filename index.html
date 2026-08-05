@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>emPower Workforce Sustainability Dashboard</title>
+    <link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="side">
+      <div class="brand">
+        <div class="mark">emPower<i data-icon="empower-mark" data-icon-class="solid brand-mark"></i></div>
+        <p>Empowered Clinicians.<br />Stronger Systems.</p>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <button class="nav-item active" type="button"><i data-icon="layout-dashboard"></i>Executive Overview</button>
+        <button class="nav-item" type="button"><i data-icon="shield-alert"></i>Workforce Risk</button>
+        <button class="nav-item" type="button"><i data-icon="network"></i>Workforce Drivers</button>
+        <button class="nav-item" type="button"><i data-icon="graduation-cap"></i>Residents & Fellows</button>
+        <button class="nav-item" type="button"><i data-icon="stethoscope"></i>Nursing Workforce</button>
+        <button class="nav-item" type="button"><i data-icon="heart-handshake"></i>Recovery & Wellbeing</button>
+        <button class="nav-item" type="button"><i data-icon="bed"></i>Patient Impact</button>
+        <button class="nav-item" type="button"><i data-icon="circle-dollar-sign"></i>Financial Impact</button>
+        <button class="nav-item" type="button"><i data-icon="clipboard-check"></i>Interventions</button>
+        <button class="nav-item" type="button"><i data-icon="file-text"></i>Reports</button>
+      </nav>
+
+      <section class="source">
+        <h2>Data Last Updated</h2>
+        <p>Jun 1, 2024&nbsp;&nbsp;6:00 AM</p>
+        <hr />
+        <h2>Data Sources</h2>
+        <ul>
+          <li>HR / Payroll</li>
+          <li>Scheduling System</li>
+          <li>EHR / Quality</li>
+          <li>Press Ganey</li>
+          <li>emPower+ Platform</li>
+          <li>Wearables</li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="app">
+      <header class="top">
+        <div>
+          <h1>Workforce Sustainability Dashboard</h1>
+          <p>Workforce Sustainability Command Center</p>
+        </div>
+        <div class="tools">
+          <button class="pill" type="button">May 1 – May 31, 2024 <i data-icon="calendar"></i></button>
+          <button class="pill" type="button">Compare to: Apr 1 – Apr 30, 2024 <i data-icon="chevron-down" data-icon-class="sm"></i></button>
+          <button class="pill" type="button"><i data-icon="list-filter"></i> Filters</button>
+          <button class="help" type="button" aria-label="Help"><i data-icon="circle-help"></i></button>
+        </div>
+      </header>
+
+      <section class="intro">
+        <div class="intro-main">
+          <section class="alert">
+            <i data-icon="shield-user" data-icon-class="shield"></i>
+            <p>
+              <strong><b>26%</b> of the clinical workforce is at elevated risk for burnout within the next 90 days,
+              representing an estimated <b>$3.2M</b> retention exposure.</strong>
+              <small>Primary drivers are sleep deficit, overtime burden, and staffing shortages concentrated in Emergency Medicine residency and ICU nursing.</small>
+            </p>
+          </section>
+
+          <section class="metrics" id="metrics"></section>
+        </div>
+
+        <article class="card heat">
+          <div class="head">
+            <div>
+              <h2>Workforce Risk Heat Map</h2>
+            </div>
+            <i data-icon="info" data-icon-class="info"></i>
+          </div>
+          <div class="heat-key">
+            <span>Clinical Area</span>
+            <span>Risk Level</span>
+            <span>Low</span>
+            <span>Moderate</span>
+            <span>High</span>
+          </div>
+          <div id="heat"></div>
+          <a href="#">View all units <i data-icon="arrow-right" data-icon-class="sm"></i></a>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card stress">
+          <div class="head">
+            <div>
+              <h2>Key Drivers of Workforce Stress</h2>
+              <p>Current Month</p>
+            </div>
+          </div>
+          <div class="stress-body">
+            <div class="donut" aria-label="Stress driver breakdown"></div>
+            <ul id="stressList" class="legend"></ul>
+          </div>
+        </article>
+
+        <article class="card ops">
+          <div class="head">
+            <div>
+              <h2>Operational Workforce Metrics</h2>
+            </div>
+          </div>
+          <div class="split">
+            <div>
+              <h3>Staffing & Workload</h3>
+              <table id="staffTable"></table>
+            </div>
+            <div>
+              <h3>Workforce Stability</h3>
+              <table id="stabilityTable"></table>
+            </div>
+          </div>
+        </article>
+
+        <article class="card forecast">
+          <div class="head">
+            <div>
+              <h2>Burnout Risk Forecast</h2>
+              <p>Next 90 Days</p>
+            </div>
+          </div>
+          <div id="forecast"></div>
+          <a href="#">View detailed forecast <i data-icon="arrow-right" data-icon-class="sm"></i></a>
+        </article>
+
+        <article class="card ranks programs">
+          <div class="head">
+            <div>
+              <h2>Residents & Fellows</h2>
+              <p>Program Sustainability Ranking</p>
+            </div>
+          </div>
+          <table id="programTable"></table>
+          <a href="#">View all programs <i data-icon="arrow-right" data-icon-class="sm"></i></a>
+        </article>
+
+        <article class="card fatigue">
+          <div class="head">
+            <div>
+              <h2>Rotation Fatigue Analysis</h2>
+              <p>Average Fatigue Score</p>
+            </div>
+          </div>
+          <div id="fatigueBars" class="bars"></div>
+        </article>
+
+        <article class="card ranks nurse-rank">
+          <div class="head">
+            <div>
+              <h2>Nursing Workforce</h2>
+              <p>Unit Sustainability Ranking</p>
+            </div>
+          </div>
+          <table id="nurseTable"></table>
+          <a href="#">View all units <i data-icon="arrow-right" data-icon-class="sm"></i></a>
+        </article>
+
+        <div class="right-rail">
+          <article class="card actions">
+            <div class="head">
+              <div>
+                <h2>Recommended Actions</h2>
+              </div>
+              <i data-icon="info" data-icon-class="info"></i>
+            </div>
+            <div id="actions"></div>
+            <a href="#">View all interventions <i data-icon="arrow-right" data-icon-class="sm"></i></a>
+          </article>
+
+          <article class="card nursing">
+            <div class="head">
+              <div>
+                <h2>Nursing Workforce Indicators</h2>
+                <p>Current</p>
+              </div>
+            </div>
+            <div id="nursingBars"></div>
+            <a href="#">View full nursing report <i data-icon="arrow-right" data-icon-class="sm"></i></a>
+          </article>
+        </div>
+
+        <article class="card trend">
+          <div class="head">
+            <div>
+              <h2>Organizational Recovery Trends</h2>
+              <p>Recovery Index (0–100)</p>
+            </div>
+          </div>
+          <svg class="trend-chart" viewBox="0 0 430 230" role="img" aria-label="Recovery trend line chart">
+            <path class="axis" d="M50 20V180H410" />
+            <path class="gridline" d="M50 20H410M50 60H410M50 100H410M50 140H410M50 180H410" />
+            <text class="y-label" x="12" y="25">90</text>
+            <text class="y-label" x="12" y="65">80</text>
+            <text class="y-label" x="12" y="105">70</text>
+            <text class="y-label" x="12" y="145">60</text>
+            <text class="y-label" x="12" y="185">50</text>
+            <path class="line" d="M80 132 L138 120 L196 108 L254 96 L312 116 L370 84" />
+            <g id="trendDots"></g>
+          </svg>
+        </article>
+
+        <article class="card patient">
+          <div class="head">
+            <div>
+              <h2>Patient Care Impact</h2>
+              <p>Higher risk areas compared to lower risk areas</p>
+            </div>
+          </div>
+          <table id="patientTable"></table>
+        </article>
+
+        <article class="card finance">
+          <div class="head">
+            <div>
+              <h2>Financial Impact</h2>
+              <p>Estimated Annual Workforce Exposure</p>
+            </div>
+            <i data-icon="info" data-icon-class="info"></i>
+          </div>
+          <table id="financeTable"></table>
+          <div class="total"><span>Total Estimated Exposure</span><strong>$3,200,000</strong></div>
+        </article>
+
+        <article class="card wellbeing">
+          <div class="head">
+            <div>
+              <h2>Wellbeing Snapshot</h2>
+              <p>from emPower+</p>
+            </div>
+            <i data-icon="info" data-icon-class="info"></i>
+          </div>
+          <div id="wellbeing" class="well-grid"></div>
+          <a href="#">View wellbeing analytics <i data-icon="arrow-right" data-icon-class="sm"></i></a>
+        </article>
+      </section>
+
+      <footer>
+        <span>pp = percentage points</span>
+        <span>YTD = Year to Date</span>
+        <span>emPower+ integrates data from your clinical, operational and wellbeing systems to provide actionable insights.</span>
+        <span>Powered by <strong>emPower+</strong></span>
+      </footer>
+    </main>
+
+    <script src="assets/icons.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 146 34" width="146" height="34" role="img" aria-label="emPower+">
+  <!-- Full lockup: wordmark plus the brand mark. The dashboard sidebar renders its
+       own wordmark as live text so it inherits the page font; this standalone file
+       is for the favicon, README, and anywhere the logo is used as an image. -->
+  <text x="0" y="26"
+        font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-size="27" font-weight="700" letter-spacing="-0.4" fill="#05123a">emPower</text>
+  <g fill="#2cc36b" transform="translate(119 5) scale(1.06)">
+    <rect x="7.4" y="6.6" width="5.2" height="14.8" rx="2.6"/>
+    <rect x="2.6" y="11.4" width="14.8" height="5.2" rx="2.6"/>
+    <path d="M21.6 2.4a7.6 7.6 0 0 1-7.6 7.6 7.6 7.6 0 0 1 7.6-7.6z"/>
+  </g>
+</svg>

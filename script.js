@@ -288,3 +288,286 @@ renderTable("#patientTable", ["Metric", "Low Risk Units", "High Risk Units", "Di
 renderTable("#financeTable", ["Category", "Annual Cost"], finance.map(row => [...row, ""]));
 renderNursing();
 renderWellbeing();
+
+/* =========================================================================
+   Sidebar tab views
+   Each tab regroups the Executive Overview's own boxes by theme and swaps
+   them into place — no new content. The builders below rebuild those exact
+   boxes as standalone cards from the same data the Overview uses.
+   ========================================================================= */
+
+const recoveryPoints = [
+  [80, 132, 62, "Dec '23"],
+  [138, 120, 65, "Jan '24"],
+  [196, 108, 68, "Feb '24"],
+  [254, 96, 71, "Mar '24"],
+  [312, 116, 66, "Apr '24"],
+  [370, 84, 71, "May '24"]
+];
+
+function legendInner() {
+  return stress.map(([name, value, color]) =>
+    `<li><span class="dot" style="background:${color}"></span><span>${name}</span><strong>${value}%</strong></li>`
+  ).join("");
+}
+
+function tableInner(headings, rows, markFrom = 1) {
+  const head = `<thead><tr>${headings.map(label => `<th>${label}</th>`).join("")}</tr></thead>`;
+  const body = rows.map(row => {
+    const marker = row.length > headings.length ? row[headings.length] : "";
+    const cells = row.slice(0, headings.length);
+    return `<tr>${cells.map((cell, i) => `<td class="${i >= markFrom ? marker : ""}">${cell}</td>`).join("")}</tr>`;
+  }).join("");
+  return head + `<tbody>${body}</tbody>`;
+}
+
+function rankInner(label, rows) {
+  return tableInner(
+    [label, "Sustainability Score", "Trend (vs Apr)"],
+    rows.map(([name, score, trend, cls]) => [name, score, icon(trend === "up" ? "caret-up" : "caret-down", "solid sm"), cls])
+  );
+}
+
+function forecastInner() {
+  return forecast.map(([name, value, iconName]) => `
+    <div class="forecast-row">
+      <span class="f-name"><span class="f-icon">${icon(iconName)}</span><span>${name}</span></span>
+      <div class="bar"><span style="width:${value * 1.55}%"></span></div>
+      <strong>${value}%</strong>
+    </div>`).join("");
+}
+
+function heatInner() {
+  return heat.map(([area, level, count, tone]) => {
+    const cells = Array.from({ length: 5 }, (_, i) => `<span class="cell ${i < count ? tone : ""}"></span>`).join("");
+    return `<div class="risk-row"><span>${area}</span><span></span>${cells}</div>`;
+  }).join("");
+}
+
+function fatigueInner() {
+  const rows = fatigue.map(([name, value, color]) => `
+    <div class="fat-row">
+      <span>${name}</span>
+      <div class="bar"><span style="width:${value * 10}%; background:${color}"></span><strong style="left:${value * 10}%">${value}</strong></div>
+    </div>`).join("");
+  return rows + `
+    <div class="fat-axis">
+      <span></span><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span>
+    </div>
+    <div class="fat-scale">
+      <span>Low Fatigue</span>
+      <span>High Fatigue</span>
+    </div>`;
+}
+
+function actionsInner() {
+  return actions.map(item => `
+    <section class="action ${item.tone === "orange" ? "warn" : item.tone === "green" ? "ok" : ""}">
+      <div>
+        <h3>${item.title}</h3>
+        <ul>${item.items.map(text => `<li>${text}</li>`).join("")}</ul>
+      </div>
+      <span class="badge ${item.tone}">${icon(item.badge)}</span>
+      <p>${item.rec}</p>
+    </section>`).join("");
+}
+
+function nursingInner() {
+  return nursingBars.map(([name, value, color]) => `
+    <div class="nurse-row">
+      <span>${name}</span>
+      <strong>${value}%</strong>
+      <div class="bar"><span style="width:${value * 2.3}%; background:${color}"></span></div>
+    </div>`).join("");
+}
+
+function wellbeingInner() {
+  return wellbeing.map(([name, value, change, trend, iconName, tone]) => `
+    <section class="well">
+      <div class="icon soft ${tone}">${icon(iconName)}</div>
+      <div>
+        <h3>${name}</h3>
+        <strong>${value}</strong>
+        <small class="${trend}">${trendText(change)}</small>
+      </div>
+    </section>`).join("");
+}
+
+function trendChartHTML(points) {
+  const dots = points.map(([x, y, val, label], i) => {
+    const final = i === points.length - 1 ? " final" : "";
+    return `
+    <circle class="point${final}" cx="${x}" cy="${y}" r="${i === points.length - 1 ? 20 : 6}"></circle>
+    <text class="label${final}" x="${x - 8}" y="${i === points.length - 1 ? y + 5 : y - 13}">${val}</text>
+    <text class="label" x="${x - 20}" y="215" style="font-size:10px">${label}</text>`;
+  }).join("");
+  const line = "M" + points.map(([x, y]) => `${x} ${y}`).join(" L ");
+  return `
+    <svg class="trend-chart" viewBox="0 0 430 230" role="img" aria-label="Recovery trend line chart">
+      <path class="axis" d="M50 20V180H410" />
+      <path class="gridline" d="M50 20H410M50 60H410M50 100H410M50 140H410M50 180H410" />
+      <text class="y-label" x="12" y="25">90</text>
+      <text class="y-label" x="12" y="65">80</text>
+      <text class="y-label" x="12" y="105">70</text>
+      <text class="y-label" x="12" y="145">60</text>
+      <text class="y-label" x="12" y="185">50</text>
+      <path class="line" d="${line}" />
+      <g>${dots}</g>
+    </svg>`;
+}
+
+/* ---- Standalone cards (same boxes the Overview shows) --------------------- */
+
+function heatCard() {
+  return `
+    <article class="card heat">
+      <div class="head"><div><h2>Workforce Risk Heat Map</h2></div>${icon("info", "info")}</div>
+      <div class="heat-key">
+        <span>Clinical Area</span><span>Risk Level</span><span>Low</span><span>Moderate</span><span>High</span>
+      </div>
+      <div>${heatInner()}</div>
+      <a href="#">View all units ${icon("arrow-right", "sm")}</a>
+    </article>`;
+}
+
+function forecastCard() {
+  return `
+    <article class="card forecast">
+      <div class="head"><div><h2>Burnout Risk Forecast</h2><p>Next 90 Days</p></div></div>
+      <div>${forecastInner()}</div>
+      <a href="#">View detailed forecast ${icon("arrow-right", "sm")}</a>
+    </article>`;
+}
+
+function driversCard() {
+  return `
+    <article class="card stress">
+      <div class="head"><div><h2>Key Drivers of Workforce Stress</h2><p>Current Month</p></div></div>
+      <div class="stress-body">
+        <div class="donut" aria-label="Stress driver breakdown"></div>
+        <ul class="legend">${legendInner()}</ul>
+      </div>
+    </article>`;
+}
+
+function opsCard() {
+  return `
+    <article class="card ops">
+      <div class="head"><div><h2>Operational Workforce Metrics</h2></div></div>
+      <div class="split">
+        <div><h3>Staffing &amp; Workload</h3><table>${tableInner(["Metric", "Current", "Target"], staffing)}</table></div>
+        <div><h3>Workforce Stability</h3><table>${tableInner(["Metric", "Current"], stability)}</table></div>
+      </div>
+    </article>`;
+}
+
+function programsCard() {
+  return `
+    <article class="card ranks programs">
+      <div class="head"><div><h2>Residents &amp; Fellows</h2><p>Program Sustainability Ranking</p></div></div>
+      <table>${rankInner("Program", programs)}</table>
+      <a href="#">View all programs ${icon("arrow-right", "sm")}</a>
+    </article>`;
+}
+
+function fatigueCard() {
+  return `
+    <article class="card fatigue">
+      <div class="head"><div><h2>Rotation Fatigue Analysis</h2><p>Average Fatigue Score</p></div></div>
+      <div class="bars">${fatigueInner()}</div>
+    </article>`;
+}
+
+function nurseRankCard() {
+  return `
+    <article class="card ranks nurse-rank">
+      <div class="head"><div><h2>Nursing Workforce</h2><p>Unit Sustainability Ranking</p></div></div>
+      <table>${rankInner("Unit", nurses)}</table>
+      <a href="#">View all units ${icon("arrow-right", "sm")}</a>
+    </article>`;
+}
+
+function nursingIndicatorsCard() {
+  return `
+    <article class="card nursing">
+      <div class="head"><div><h2>Nursing Workforce Indicators</h2><p>Current</p></div></div>
+      <div>${nursingInner()}</div>
+      <a href="#">View full nursing report ${icon("arrow-right", "sm")}</a>
+    </article>`;
+}
+
+function recoveryTrendCard() {
+  return `
+    <article class="card trend">
+      <div class="head"><div><h2>Organizational Recovery Trends</h2><p>Recovery Index (0–100)</p></div></div>
+      ${trendChartHTML(recoveryPoints)}
+    </article>`;
+}
+
+function wellbeingCard() {
+  return `
+    <article class="card wellbeing">
+      <div class="head"><div><h2>Wellbeing Snapshot</h2><p>from emPower+</p></div>${icon("info", "info")}</div>
+      <div class="well-grid">${wellbeingInner()}</div>
+      <a href="#">View wellbeing analytics ${icon("arrow-right", "sm")}</a>
+    </article>`;
+}
+
+function patientCard() {
+  return `
+    <article class="card patient">
+      <div class="head"><div><h2>Patient Care Impact</h2><p>Higher risk areas compared to lower risk areas</p></div></div>
+      <table>${tableInner(["Metric", "Low Risk Units", "High Risk Units", "Difference"], patient.map(row => [...row, "bad"]), 3)}</table>
+    </article>`;
+}
+
+function financeCard() {
+  return `
+    <article class="card finance">
+      <div class="head"><div><h2>Financial Impact</h2><p>Estimated Annual Workforce Exposure</p></div>${icon("info", "info")}</div>
+      <table>${tableInner(["Category", "Annual Cost"], finance.map(row => [...row, ""]))}</table>
+      <div class="total"><span>Total Estimated Exposure</span><strong>$3,200,000</strong></div>
+    </article>`;
+}
+
+function actionsCard() {
+  return `
+    <article class="card actions">
+      <div class="head"><div><h2>Recommended Actions</h2></div>${icon("info", "info")}</div>
+      <div>${actionsInner()}</div>
+      <a href="#">View all interventions ${icon("arrow-right", "sm")}</a>
+    </article>`;
+}
+
+/* ---- Compose the tab views and wire in-place switching -------------------- */
+
+function view(id, cols, cards) {
+  return `<div class="view" id="${id}"><div class="page-grid ${cols}">${cards.join("")}</div></div>`;
+}
+
+function renderViews() {
+  document.querySelector("#view-host").innerHTML =
+    view("v-risk", "cols-2", [heatCard(), forecastCard()]) +
+    view("v-drivers", "cols-2", [driversCard(), opsCard()]) +
+    view("v-residents", "cols-2", [programsCard(), fatigueCard()]) +
+    view("v-nursing", "cols-2", [nurseRankCard(), nursingIndicatorsCard()]) +
+    view("v-recovery", "cols-2", [recoveryTrendCard(), wellbeingCard()]) +
+    view("v-patient", "cols-1", [patientCard()]) +
+    view("v-finance", "cols-1", [financeCard()]) +
+    view("v-interventions", "cols-1", [actionsCard()]);
+}
+
+function switchView(id) {
+  const target = id && document.getElementById(id);
+  if (!target) return;
+  document.querySelectorAll(".view").forEach(section => section.classList.toggle("active", section === target));
+  document.querySelectorAll(".nav-item").forEach(button => button.classList.toggle("active", button.dataset.view === id));
+  window.scrollTo(0, 0);
+}
+
+document.querySelector(".nav").addEventListener("click", event => {
+  const button = event.target.closest(".nav-item");
+  if (button) switchView(button.dataset.view);
+});
+
+renderViews();

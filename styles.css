@@ -1272,9 +1272,64 @@ footer {
   font-size: 8px;
 }
 
+/* ---- Sidebar tab views ---------------------------------------------------
+   Each sidebar item maps to one .view; only the active one is shown. A tab
+   simply regroups the Executive Overview's own cards by theme — no new
+   content, so the cards keep their existing styling. */
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.page-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 9px;
+  /* default align-items: stretch — both cards in a row share the taller height */
+}
+
+.page-grid.cols-2 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.page-grid.cols-1 {
+  grid-template-columns: minmax(0, 780px);
+}
+
+/* Overview cards pin an explicit grid cell in their class; clear it in a tab. */
+.page-grid > .card {
+  grid-column: auto;
+  grid-row: auto;
+  min-height: auto;
+}
+
+/* Two-up tabs: cards stretch to equal height, so pin each footer link to the
+   bottom (keeping the two boxes' links aligned) with a guaranteed gap above. */
+.page-grid.cols-2 > .card > a {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+/* Single-card tabs size to content, so the footer link / finance total would
+   sit flush against the last row — give them a fixed gap instead. */
+.page-grid.cols-1 > .card > a {
+  margin-top: 14px;
+}
+
+.page-grid.cols-1 > .card .total {
+  margin-top: 12px;
+}
+
 @media (max-width: 1250px) {
   body {
     min-width: 0;
+  }
+
+  .page-grid.cols-2 {
+    grid-template-columns: 1fr;
   }
 
   .side {

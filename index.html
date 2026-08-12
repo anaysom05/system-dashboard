@@ -15,15 +15,15 @@
       </div>
 
       <nav class="nav" aria-label="Primary">
-        <button class="nav-item active" type="button"><i data-icon="layout-dashboard"></i>Executive Overview</button>
-        <button class="nav-item" type="button"><i data-icon="shield-alert"></i>Workforce Risk</button>
-        <button class="nav-item" type="button"><i data-icon="network"></i>Workforce Drivers</button>
-        <button class="nav-item" type="button"><i data-icon="graduation-cap"></i>Residents & Fellows</button>
-        <button class="nav-item" type="button"><i data-icon="stethoscope"></i>Nursing Workforce</button>
-        <button class="nav-item" type="button"><i data-icon="heart-handshake"></i>Recovery & Wellbeing</button>
-        <button class="nav-item" type="button"><i data-icon="bed"></i>Patient Impact</button>
-        <button class="nav-item" type="button"><i data-icon="circle-dollar-sign"></i>Financial Impact</button>
-        <button class="nav-item" type="button"><i data-icon="clipboard-check"></i>Interventions</button>
+        <button class="nav-item active" type="button" data-view="v-overview"><i data-icon="layout-dashboard"></i>Executive Overview</button>
+        <button class="nav-item" type="button" data-view="v-risk"><i data-icon="shield-alert"></i>Workforce Risk</button>
+        <button class="nav-item" type="button" data-view="v-drivers"><i data-icon="network"></i>Workforce Drivers</button>
+        <button class="nav-item" type="button" data-view="v-residents"><i data-icon="graduation-cap"></i>Residents & Fellows</button>
+        <button class="nav-item" type="button" data-view="v-nursing"><i data-icon="stethoscope"></i>Nursing Workforce</button>
+        <button class="nav-item" type="button" data-view="v-recovery"><i data-icon="heart-handshake"></i>Recovery & Wellbeing</button>
+        <button class="nav-item" type="button" data-view="v-patient"><i data-icon="bed"></i>Patient Impact</button>
+        <button class="nav-item" type="button" data-view="v-finance"><i data-icon="circle-dollar-sign"></i>Financial Impact</button>
+        <button class="nav-item" type="button" data-view="v-interventions"><i data-icon="clipboard-check"></i>Interventions</button>
         <button class="nav-item" type="button"><i data-icon="file-text"></i>Reports</button>
       </nav>
 
@@ -57,6 +57,7 @@
         </div>
       </header>
 
+      <div class="view active" id="v-overview">
       <section class="intro">
         <div class="intro-main">
           <section class="alert">
@@ -243,6 +244,9 @@
           <a href="#">View wellbeing analytics <i data-icon="arrow-right" data-icon-class="sm"></i></a>
         </article>
       </section>
+      </div>
+
+      <div id="view-host"></div>
 
       <footer>
         <span>pp = percentage points</span>

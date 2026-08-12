@@ -34,7 +34,7 @@ const stability = [
 const forecast = [
   ["Residents", 28, "graduation-cap"],
   ["Fellows", 19, "award"],
-  ["Nursing", 32, "stethoscope"],
+  ["Nursing", 32, "user-round"],
   ["Entire Organization", 26, "users-round"]
 ];
 
@@ -180,7 +180,7 @@ function renderForecast() {
   document.querySelector("#forecast").innerHTML = forecast.map(([name, value, iconName]) => `
     <div class="forecast-row">
       <span class="f-name"><span class="f-icon">${icon(iconName)}</span><span>${name}</span></span>
-      <div class="bar"><span style="width:${value * 2.4}%"></span></div>
+      <div class="bar"><span style="width:${value * 1.55}%"></span></div>
       <strong>${value}%</strong>
     </div>
   `).join("");
@@ -189,7 +189,7 @@ function renderForecast() {
 function renderHeat() {
   document.querySelector("#heat").innerHTML = heat.map(([area, level, count, tone]) => {
     const cells = Array.from({ length: 5 }, (_, i) => `<span class="cell ${i < count ? tone : ""}"></span>`).join("");
-    return `<div class="risk-row"><span>${area}</span><span>${level}</span>${cells}</div>`;
+    return `<div class="risk-row"><span>${area}</span><span></span>${cells}</div>`;
   }).join("");
 }
 
@@ -205,8 +205,7 @@ function renderFatigue() {
   const rows = fatigue.map(([name, value, color]) => `
     <div class="fat-row">
       <span>${name}</span>
-      <div class="bar"><span style="width:${value * 10}%; background:${color}"></span></div>
-      <strong>${value}</strong>
+      <div class="bar"><span style="width:${value * 10}%; background:${color}"></span><strong style="left:${value * 10}%">${value}</strong></div>
     </div>
   `).join("");
   document.querySelector("#fatigueBars").innerHTML = rows + `
@@ -243,8 +242,8 @@ function renderTrend() {
     [370, 84, 71, "May '24"]
   ];
   document.querySelector("#trendDots").innerHTML = points.map(([x, y, val, label], i) => `
-    <circle class="point" cx="${x}" cy="${y}" r="${i === 5 ? 20 : 6}"></circle>
-    <text class="label" x="${x - 8}" y="${i === 5 ? y + 5 : y - 13}">${val}</text>
+    <circle class="point ${i === 5 ? "final" : ""}" cx="${x}" cy="${y}" r="${i === 5 ? 20 : 6}"></circle>
+    <text class="label ${i === 5 ? "final" : ""}" x="${x - 8}" y="${i === 5 ? y + 5 : y - 13}">${val}</text>
     <text class="label" x="${x - 20}" y="215" style="font-size:10px">${label}</text>
   `).join("");
 }

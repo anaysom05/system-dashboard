@@ -51,8 +51,18 @@
         </div>
         <div class="tools">
           <button class="pill" type="button">May 1 – May 31, 2024 <i data-icon="calendar"></i></button>
-          <button class="pill" type="button">Compare to: Apr 1 – Apr 30, 2024 <i data-icon="chevron-down" data-icon-class="sm"></i></button>
-          <button class="pill" type="button"><i data-icon="list-filter"></i> Filters</button>
+          <div class="pill-wrap">
+            <button class="pill" type="button" id="compareBtn" aria-haspopup="true" aria-expanded="false">
+              <span id="compareLabel">Compare to: Apr 1 – Apr 30, 2024</span> <i data-icon="chevron-down" data-icon-class="sm"></i>
+            </button>
+            <div class="dropdown-menu" id="compareMenu" role="menu" aria-label="Compare to"></div>
+          </div>
+          <div class="pill-wrap">
+            <button class="pill" type="button" id="filterBtn" aria-haspopup="true" aria-expanded="false">
+              <i data-icon="list-filter"></i> Filters<span class="pill-badge" id="filterBadge" hidden>1</span>
+            </button>
+            <div class="dropdown-menu" id="filterMenu" role="menu" aria-label="Filters"></div>
+          </div>
           <button class="help" type="button" aria-label="Help"><i data-icon="circle-help"></i></button>
         </div>
       </header>
@@ -63,9 +73,9 @@
           <section class="alert">
             <i data-icon="shield-user" data-icon-class="shield"></i>
             <p>
-              <strong><b>26%</b> of the clinical workforce is at elevated risk for burnout within the next 90 days,
-              representing an estimated <b>$3.2M</b> retention exposure.</strong>
-              <small>Primary drivers are sleep deficit, overtime burden, and staffing shortages concentrated in Emergency Medicine residency and ICU nursing.</small>
+              <strong><b id="alertBurnoutPct">26%</b> of the clinical workforce is at elevated risk for burnout within the next 90 days,
+              representing an estimated <b id="alertExposure">$3.2M</b> retention exposure.</strong>
+              <small id="alertDrivers">Primary drivers are sleep deficit, overtime burden, and staffing shortages concentrated in Emergency Medicine residency and ICU nursing.</small>
             </p>
           </section>
 
@@ -229,7 +239,7 @@
             <i data-icon="info" data-icon-class="info"></i>
           </div>
           <table id="financeTable"></table>
-          <div class="total"><span>Total Estimated Exposure</span><strong>$3,200,000</strong></div>
+          <div class="total"><span>Total Estimated Exposure</span><strong id="financeTotal">$3,200,000</strong></div>
         </article>
 
         <article class="card wellbeing">

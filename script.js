@@ -900,6 +900,214 @@ function actionsCard() {
     </article>`;
 }
 
+/* ---- Secondary chart cards: extra graphs for the sidebar tabs -------------
+   These derive additional visuals from the same working data the primary
+   cards above use — bar comparisons and donuts — so every tab gets more
+   than a single table/chart without inventing new datasets. Deliberately
+   kept to 2 extra cards per tab (4 total, or 2 total for the single-card
+   tabs) so no tab approaches the density of the Executive Overview. */
+
+function donutHTML(items) {
+  const total = items.reduce((sum, [, value]) => sum + value, 0) || 1;
+  let acc = 0;
+  const stops = items.map(([, value, color]) => {
+    const start = (acc / total) * 100;
+    acc += value;
+    const end = (acc / total) * 100;
+    return `${color} ${start}% ${end}%`;
+  }).join(", ");
+  const legend = items.map(([label, value, color]) => `
+    <li><span class="dot" style="background:${color}"></span><span>${label}</span><strong>${Math.round((value / total) * 100)}%</strong></li>
+  `).join("");
+  return `
+    <div class="stress-body">
+      <div class="donut" style="background:conic-gradient(${stops})"></div>
+      <ul class="legend">${legend}</ul>
+    </div>`;
+}
+
+function barListHTML(rows, maxValue, unit = "") {
+  return rows.map(([name, value, color]) => `
+    <div class="nurse-row">
+      <span>${name}</span>
+      <strong>${value}${unit}</strong>
+      <div class="bar"><span style="width:${Math.min(100, (parseFloat(value) / maxValue) * 100)}%; background:${color}"></span></div>
+    </div>`).join("");
+}
+
+function barListCard(title, subtitle, bodyHTML) {
+  return `
+    <article class="card">
+      <div class="head"><div><h2>${title}</h2><p>${subtitle}</p></div></div>
+      <div class="bars">${bodyHTML}</div>
+    </article>`;
+}
+
+/* Workforce Risk tab — risk-level mix, plus the lowest-scoring programs/units */
+function riskDistributionCard() {
+  const counts = {};
+  heat.forEach(([, level]) => { counts[level] = (counts[level] || 0) + 1; });
+  const items = [
+    ["High Risk Areas", counts.High || 0, "var(--red)"],
+    ["Moderate Risk Areas", counts.Moderate || 0, "var(--orange)"],
+    ["Low Risk Areas", counts.Low || 0, "var(--green)"]
+  ].filter(([, value]) => value > 0);
+  return `
+    <article class="card">
+      <div class="head"><div><h2>Risk Level Distribution</h2><p>Share of Clinical Areas</p></div></div>
+      ${donutHTML(items)}
+    </article>`;
+}
+
+function topRiskCard() {
+  const combined = [
+    ...programs.map(([name, score]) => [`${name} (Program)`, score]),
+    ...nurses.map(([name, score]) => [`${name} (Unit)`, score])
+  ].sort((a, b) => a[1] - b[1]).slice(0, 5);
+  const rows = combined.map(([name, score]) => [name, score, score < 70 ? "var(--red)" : score < 80 ? "var(--orange)" : "var(--green)"]);
+  return barListCard("Lowest Sustainability Scores", "Programs & Units Needing Attention", barListHTML(rows, 100));
+}
+
+/* Workforce Drivers tab — retention/turnover split, staffing load vs target */
+function stabilitySplitCard() {
+  const turnover = stability.find(row => /turnover/i.test(row[0]));
+  const retention = stability.find(row => /retention/i.test(row[0]));
+  const items = [
+    [retention ? retention[0] : "Retention Rate", parseFloat(retention ? retention[1] : 0), "var(--green)"],
+    [turnover ? turnover[0] : "Turnover Rate", parseFloat(turnover ? turnover[1] : 0), "var(--red)"]
+  ];
+  return `
+    <article class="card">
+      <div class="head"><div><h2>Workforce Stability Split</h2><p>Retention vs. Turnover (YTD)</p></div></div>
+      ${donutHTML(items)}
+    </article>`;
+}
+
+function staffingLoadCard() {
+  const rows = staffing
+    .filter(([, , target]) => target && /\d/.test(target))
+    .map(([label, current, target]) => {
+      const currentNum = parseFloat(current);
+      const targetNum = parseFloat(target.replace(/[^0-9.]/g, "")) || 1;
+      const pct = (currentNum / targetNum) * 100;
+      const display = String(current).includes("%") ? current : currentNum;
+      const color = currentNum > targetNum ? "var(--red)" : "var(--green)";
+      return [label, display, pct, color];
+    });
+  const body = rows.map(([label, display, pct, color]) => `
+    <div class="nurse-row">
+      <span>${label}</span>
+      <strong>${display}</strong>
+      <div class="bar"><span style="width:${Math.min(100, pct)}%; background:${color}"></span></div>
+    </div>`).join("");
+  return barListCard("Staffing Load vs. Target", "Current Value as % of Target Threshold", body);
+}
+
+/* Residents & Fellows tab — score comparison bars, resident/fellow forecast */
+function programsBarCard() {
+  const rows = programs.map(([name, score, trend]) => [name, score, trend === "up" ? "var(--green)" : "var(--red)"]);
+  return barListCard("Program Sustainability Scores", "Current Month", barListHTML(rows, 100));
+}
+
+function residentForecastCard() {
+  const rows = forecast
+    .filter(([name]) => /resident|fellow/i.test(name))
+    .map(([name, value]) => [name, value, "var(--red)"]);
+  return barListCard("Burnout Risk Forecast", "Residents & Fellows — Next 90 Days", barListHTML(rows, 50, "%"));
+}
+
+/* Nursing Workforce tab — unit score comparison, nursing vs org-wide forecast */
+function nursesBarCard() {
+  const rows = nurses.map(([name, score, trend]) => [name, score, trend === "up" ? "var(--green)" : "var(--red)"]);
+  return barListCard("Unit Sustainability Scores", "Current Month", barListHTML(rows, 100));
+}
+
+function nursingForecastCompareCard() {
+  const nursing = forecast.find(row => /^nursing$/i.test(row[0]));
+  const org = forecast.find(row => /organization/i.test(row[0]));
+  const rows = [
+    [nursing ? nursing[0] : "Nursing", nursing ? nursing[1] : 0, "var(--red)"],
+    [org ? org[0] : "Entire Organization", org ? org[1] : 0, "var(--orange)"]
+  ];
+  return barListCard("Nursing vs. Org-Wide Forecast", "Burnout Risk — Next 90 Days", barListHTML(rows, 50, "%"));
+}
+
+/* Recovery & Wellbeing tab — normalized components, fatigue-band mix */
+function wellbeingComponentsCard() {
+  const rows = wellbeing.map(([name, value, , , , tone]) => {
+    const num = parseFloat(value);
+    const isSleep = name.includes("Sleep");
+    const pct = isSleep ? Math.min(100, (num / 8) * 100) : num;
+    return [name, isSleep ? `${value} hrs` : value, pct, `var(--${tone})`];
+  });
+  const body = rows.map(([label, display, pct, color]) => `
+    <div class="nurse-row">
+      <span>${label}</span>
+      <strong>${display}</strong>
+      <div class="bar"><span style="width:${pct}%; background:${color}"></span></div>
+    </div>`).join("");
+  return barListCard("Wellbeing Components", "Normalized to a 0–100 Scale", body);
+}
+
+function fatigueDistributionCard() {
+  const bands = { High: 0, Moderate: 0, Low: 0 };
+  fatigue.forEach(([, value]) => {
+    if (value >= 7) bands.High += 1;
+    else if (value >= 4) bands.Moderate += 1;
+    else bands.Low += 1;
+  });
+  const items = [
+    ["High Fatigue (7–10)", bands.High, "var(--red)"],
+    ["Moderate Fatigue (4–7)", bands.Moderate, "var(--orange)"],
+    ["Low Fatigue (0–4)", bands.Low, "var(--green)"]
+  ].filter(([, value]) => value > 0);
+  return `
+    <article class="card">
+      <div class="head"><div><h2>Fatigue Level Distribution</h2><p>Care Settings by Band</p></div></div>
+      ${donutHTML(items)}
+    </article>`;
+}
+
+/* Patient Impact tab — risk-adjusted % difference by metric */
+function patientDifferenceCard() {
+  const rows = patient.map(([label, , , diff]) => [label, diff]);
+  const maxAbs = Math.max(...rows.map(([, diff]) => Math.abs(parseFloat(diff)))) || 1;
+  const body = rows.map(([label, diff]) => {
+    const pct = Math.min(100, (Math.abs(parseFloat(diff)) / maxAbs) * 100);
+    const display = diff.replace("+", "").trim();
+    return `
+    <div class="nurse-row">
+      <span>${label}</span>
+      <strong>${display}</strong>
+      <div class="bar"><span style="width:${pct}%; background:var(--red)"></span></div>
+    </div>`;
+  }).join("");
+  return barListCard("Risk-Adjusted Impact", "% Difference, High- vs Low-Risk Units", body);
+}
+
+/* Financial Impact tab — cost breakdown donut */
+function financeDonutCard() {
+  const palette = ["var(--red)", "var(--orange)", "var(--yellow)", "var(--teal)", "var(--violet)"];
+  const items = finance.map(([label, cost], i) => [label, parseCurrency(cost), palette[i % palette.length]]);
+  return `
+    <article class="card">
+      <div class="head"><div><h2>Cost Breakdown</h2><p>Share of Total Exposure</p></div></div>
+      ${donutHTML(items)}
+    </article>`;
+}
+
+/* Interventions tab — ranked list of areas most needing attention */
+function interventionPriorityCard() {
+  const rows = [...heat].sort((a, b) => b[2] - a[2]).slice(0, 5);
+  const body = rows.map(([area, , count, tone]) => `
+    <div class="nurse-row">
+      <span>${area}</span>
+      <strong>${count}/5</strong>
+      <div class="bar"><span style="width:${(count / 5) * 100}%; background:var(--${tone})"></span></div>
+    </div>`).join("");
+  return barListCard("Areas Needing Attention", "Ranked by Current Risk Score", body);
+}
+
 /* ---- Compose the tab views and wire in-place switching -------------------- */
 
 function view(id, cols, cards) {
@@ -908,14 +1116,14 @@ function view(id, cols, cards) {
 
 function renderViews() {
   document.querySelector("#view-host").innerHTML =
-    view("v-risk", "cols-2", [heatCard(), forecastCard()]) +
-    view("v-drivers", "cols-2", [driversCard(), opsCard()]) +
-    view("v-residents", "cols-2", [programsCard(), fatigueCard()]) +
-    view("v-nursing", "cols-2", [nurseRankCard(), nursingIndicatorsCard()]) +
-    view("v-recovery", "cols-2", [recoveryTrendCard(), wellbeingCard()]) +
-    view("v-patient", "cols-1", [patientCard()]) +
-    view("v-finance", "cols-1", [financeCard()]) +
-    view("v-interventions", "cols-1", [actionsCard()]);
+    view("v-risk", "cols-2", [heatCard(), forecastCard(), riskDistributionCard(), topRiskCard()]) +
+    view("v-drivers", "cols-2", [driversCard(), opsCard(), stabilitySplitCard(), staffingLoadCard()]) +
+    view("v-residents", "cols-2", [programsCard(), fatigueCard(), programsBarCard(), residentForecastCard()]) +
+    view("v-nursing", "cols-2", [nurseRankCard(), nursingIndicatorsCard(), nursesBarCard(), nursingForecastCompareCard()]) +
+    view("v-recovery", "cols-2", [recoveryTrendCard(), wellbeingCard(), wellbeingComponentsCard(), fatigueDistributionCard()]) +
+    view("v-patient", "cols-2", [patientCard(), patientDifferenceCard()]) +
+    view("v-finance", "cols-2", [financeCard(), financeDonutCard()]) +
+    view("v-interventions", "cols-2", [actionsCard(), interventionPriorityCard()]);
 }
 
 function switchView(id) {

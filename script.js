@@ -1,128 +1,479 @@
-const metrics = [
-  { label: "Workforce Sustainability Index", value: "78", suffix: "/100", change: "▲ 4 pts from Apr", tone: "up", icon: "chart-column", iconClass: "ring" },
-  { label: "Burnout Risk (Next 90 Days)", value: "24", suffix: "%", change: "▼ 3 pp from Apr", tone: "up", icon: "user-round", iconClass: "red fill" },
-  { label: "Retention Risk", value: "15", suffix: "%", change: "▲ 2 pp from Apr", tone: "down", icon: "users-round", iconClass: "orange" },
-  { label: "Sleep Recovery Score", value: "71", suffix: "/100", change: "▲ 5 pts from Apr", tone: "up", icon: "moon", iconClass: "violet fill" },
-  { label: "Patient Experience (Press Ganey)", value: "88", suffix: "%", change: "▲ 1 pt from Apr", tone: "up", icon: "heart-pulse", iconClass: "teal" },
-  { label: "Est. Annual Turnover Exposure", value: "$3.2", suffix: "M", change: "▲ $420K from Apr", tone: "down", icon: "dollar-sign", iconClass: "green" }
+/* =========================================================================
+   Data model
+   -------------------------------------------------------------------------
+   Two independent axes drive every visual on the Executive Overview:
+
+   1. FILTER (site scope) — "All Sites", "Main Campus", "North Satellite
+      Clinic". Each holds a complete parallel dataset (KPI base values,
+      heat map, tables, charts) for that scope.
+
+   2. COMPARE-TO (baseline period) — which prior period this month is being
+      measured against. Each holds only the delta/annotation layer (the
+      "▲ 4 pts from Apr" style change text + tone, plus the header label
+      used in "Trend (vs Apr)").
+
+   `applyState()` merges the active filter's base data with the active
+   compare option's deltas into the working `let` variables the render
+   functions already read, then re-runs every render function.
+   ========================================================================= */
+
+const compareOptions = [
+  { id: "apr2024", pillLabel: "Compare to: Apr 1 – Apr 30, 2024", short: "Apr" },
+  { id: "mar2024", pillLabel: "Compare to: Mar 1 – Mar 31, 2024", short: "Mar" },
+  { id: "may2023", pillLabel: "Compare to: May 1 – May 31, 2023 (YoY)", short: "May '23" }
 ];
 
-const stress = [
-  ["Sleep Deficit", 37, "var(--red)"],
-  ["Overtime Burden", 24, "var(--orange)"],
-  ["Night Shift Frequency", 18, "var(--yellow)"],
-  ["Staffing Shortages", 12, "var(--teal)"],
-  ["Moral Distress", 9, "var(--violet)"]
+const filterOptions = [
+  { id: "all", label: "All Sites (Org-wide)" },
+  { id: "main", label: "Main Campus" },
+  { id: "north", label: "North Satellite Clinic" }
 ];
 
-const staffing = [
-  ["Avg Weekly Hours", "58", "<55", "bad"],
-  ["Avg Overtime Hours", "8.4", "<5", "bad"],
-  ["Night Shifts / Month", "7.2", "<6", "bad"],
-  ["Sick Calls (unplanned)", "31", "<20", ""],
-  ["Vacancy Rate", "11%", "<8%", "bad"]
-];
+let activeCompareId = "apr2024";
+let activeFilterId = "all";
 
-const stability = [
-  ["Turnover Rate (YTD)", "14%", "bad"],
-  ["Retention Rate (YTD)", "86%", "good"],
-  ["Transfer Requests (YTD)", "9", ""],
-  ["FMLA Requests (YTD)", "12", ""],
-  ["Open Positions", "41", "bad"]
-];
+/* ---- Compare-to deltas: metrics/wellbeing change text + tone, per option ---- */
 
-const forecast = [
-  ["Residents", 28, "graduation-cap"],
-  ["Fellows", 19, "award"],
-  ["Nursing", 32, "user-round"],
-  ["Entire Organization", 26, "users-round"]
-];
-
-const heat = [
-  ["Emergency Medicine Residents", "High", 5, "red"],
-  ["ICU Nursing", "High", 5, "red"],
-  ["Surgical Residents", "High", 4, "red"],
-  ["Internal Medicine Residents", "Moderate", 3, "orange"],
-  ["NICU Nursing", "Moderate", 3, "orange"],
-  ["Family Medicine Residents", "Low", 1, "green"],
-  ["Outpatient Nursing", "Low", 1, "green"]
-];
-
-const programs = [
-  ["Family Medicine", 88, "up", "good"],
-  ["Pediatrics", 84, "up", "good"],
-  ["Internal Medicine", 79, "up", "good"],
-  ["Surgery", 71, "down", "bad"],
-  ["Emergency Medicine", 66, "down", "bad"]
-];
-
-const nurses = [
-  ["Oncology", 85, "up", "good"],
-  ["Pediatrics", 83, "up", "good"],
-  ["Med Surg", 80, "up", "good"],
-  ["ICU", 68, "down", "bad"],
-  ["Emergency Department", 65, "down", "bad"]
-];
-
-const fatigue = [
-  ["ICU", 9.1, "var(--red)"],
-  ["Trauma", 8.4, "var(--red)"],
-  ["Night Float", 7.2, "var(--orange)"],
-  ["Inpatient Wards", 5.1, "var(--yellow)"],
-  ["Clinic / Ambulatory", 2.8, "var(--green)"]
-];
-
-const actions = [
-  {
-    title: "Emergency Medicine Residency",
-    items: ["Burnout risk 39% (High)", "Sleep deficit worsening", "Excessive night shift burden"],
-    rec: "Recommended: Schedule review and targeted coaching",
-    badge: "circle-alert",
-    tone: "red"
+const compareDeltas = {
+  apr2024: {
+    metrics: [
+      { change: "▲ 4 pts from Apr", tone: "up" },
+      { change: "▼ 3 pp from Apr", tone: "up" },
+      { change: "▲ 2 pp from Apr", tone: "down" },
+      { change: "▲ 5 pts from Apr", tone: "up" },
+      { change: "▲ 1 pt from Apr", tone: "up" },
+      { change: "▲ $420K from Apr", tone: "down" }
+    ],
+    wellbeing: [
+      { change: "▼ 0.3 from Apr", trend: "down" },
+      { change: "▼ 4 from Apr", trend: "down" },
+      { change: "▲ 5 from Apr", trend: "up" },
+      { change: "▼ 3 from Apr", trend: "up" }
+    ]
   },
-  {
-    title: "ICU Nursing",
-    items: ["Compassion fatigue elevated", "Overtime increased 22%"],
-    rec: "Recommended: Additional staffing support",
-    badge: "triangle-alert",
-    tone: "orange"
+  mar2024: {
+    metrics: [
+      { change: "▲ 7 pts from Mar", tone: "up" },
+      { change: "▼ 6 pp from Mar", tone: "up" },
+      { change: "▲ 4 pp from Mar", tone: "down" },
+      { change: "▲ 9 pts from Mar", tone: "up" },
+      { change: "▲ 2 pts from Mar", tone: "up" },
+      { change: "▲ $610K from Mar", tone: "down" }
+    ],
+    wellbeing: [
+      { change: "▼ 0.6 from Mar", trend: "down" },
+      { change: "▼ 7 from Mar", trend: "down" },
+      { change: "▲ 9 from Mar", trend: "up" },
+      { change: "▼ 6 from Mar", trend: "down" }
+    ]
   },
-  {
-    title: "Family Medicine Residency",
-    items: ["Strong recovery trends", "Lowest burnout risk"],
-    rec: "Recommended: Identify best practices for system-wide adoption",
-    badge: "circle-check",
-    tone: "green"
+  may2023: {
+    metrics: [
+      { change: "▲ 11 pts from May '23", tone: "up" },
+      { change: "▼ 9 pp from May '23", tone: "up" },
+      { change: "▼ 3 pp from May '23", tone: "up" },
+      { change: "▲ 14 pts from May '23", tone: "up" },
+      { change: "▲ 3 pts from May '23", tone: "up" },
+      { change: "▼ $180K from May '23", tone: "up" }
+    ],
+    wellbeing: [
+      { change: "▲ 0.4 from May '23", trend: "up" },
+      { change: "▼ 11 from May '23", trend: "down" },
+      { change: "▲ 13 from May '23", trend: "up" },
+      { change: "▼ 10 from May '23", trend: "down" }
+    ]
   }
-];
+};
 
-const patient = [
-  ["HCAHPS Score", "91%", "82%", "-9 pts"],
-  ["Safety Events (per 1k pt days)", "4", "11", "+175%"],
-  ["Medication Errors (per 1k pt days)", "2", "7", "+250%"],
-  ["Patient Complaints (per 1k pt days)", "3", "12", "+300%"]
-];
+/* ---- Filter datasets: full base data per site scope ---------------------- */
 
-const finance = [
-  ["Nurse Turnover", "$1,800,000"],
-  ["Resident / Fellow Attrition", "$450,000"],
-  ["Overtime Expense", "$650,000"],
-  ["Vacancy Impact", "$300,000"]
-];
+const filterDatasets = {
+  all: {
+    metricsBase: [
+      { label: "Workforce Sustainability Index", value: "78", suffix: "/100", icon: "chart-column", iconClass: "ring" },
+      { label: "Burnout Risk (Next 90 Days)", value: "24", suffix: "%", icon: "user-round", iconClass: "red fill" },
+      { label: "Retention Risk", value: "15", suffix: "%", icon: "users-round", iconClass: "orange" },
+      { label: "Sleep Recovery Score", value: "71", suffix: "/100", icon: "moon", iconClass: "violet fill" },
+      { label: "Patient Experience (Press Ganey)", value: "88", suffix: "%", icon: "heart-pulse", iconClass: "teal" },
+      { label: "Est. Annual Turnover Exposure", value: "$3.2", suffix: "M", icon: "dollar-sign", iconClass: "green" }
+    ],
+    wellbeingBase: [
+      { label: "Avg Sleep (hours)", value: "6.1", icon: "bed", tone: "violet" },
+      { label: "Stress Index (0–100)", value: "62", icon: "brain", tone: "orange" },
+      { label: "Recovery Index (0–100)", value: "71", icon: "heart-pulse", tone: "green" },
+      { label: "Burnout Risk Score (0–100)", value: "59", icon: "gauge", tone: "red" }
+    ],
+    stress: [
+      ["Sleep Deficit", 37, "var(--red)"],
+      ["Overtime Burden", 24, "var(--orange)"],
+      ["Night Shift Frequency", 18, "var(--yellow)"],
+      ["Staffing Shortages", 12, "var(--teal)"],
+      ["Moral Distress", 9, "var(--violet)"]
+    ],
+    staffing: [
+      ["Avg Weekly Hours", "58", "<55", "bad"],
+      ["Avg Overtime Hours", "8.4", "<5", "bad"],
+      ["Night Shifts / Month", "7.2", "<6", "bad"],
+      ["Sick Calls (unplanned)", "31", "<20", ""],
+      ["Vacancy Rate", "11%", "<8%", "bad"]
+    ],
+    stability: [
+      ["Turnover Rate (YTD)", "14%", "bad"],
+      ["Retention Rate (YTD)", "86%", "good"],
+      ["Transfer Requests (YTD)", "9", ""],
+      ["FMLA Requests (YTD)", "12", ""],
+      ["Open Positions", "41", "bad"]
+    ],
+    forecast: [
+      ["Residents", 28, "graduation-cap"],
+      ["Fellows", 19, "award"],
+      ["Nursing", 32, "user-round"],
+      ["Entire Organization", 26, "users-round"]
+    ],
+    heat: [
+      ["Emergency Medicine Residents", "High", 5, "red"],
+      ["ICU Nursing", "High", 5, "red"],
+      ["Surgical Residents", "High", 4, "red"],
+      ["Internal Medicine Residents", "Moderate", 3, "orange"],
+      ["NICU Nursing", "Moderate", 3, "orange"],
+      ["Family Medicine Residents", "Low", 1, "green"],
+      ["Outpatient Nursing", "Low", 1, "green"]
+    ],
+    programs: [
+      ["Family Medicine", 88, "up", "good"],
+      ["Pediatrics", 84, "up", "good"],
+      ["Internal Medicine", 79, "up", "good"],
+      ["Surgery", 71, "down", "bad"],
+      ["Emergency Medicine", 66, "down", "bad"]
+    ],
+    nurses: [
+      ["Oncology", 85, "up", "good"],
+      ["Pediatrics", 83, "up", "good"],
+      ["Med Surg", 80, "up", "good"],
+      ["ICU", 68, "down", "bad"],
+      ["Emergency Department", 65, "down", "bad"]
+    ],
+    fatigue: [
+      ["ICU", 9.1, "var(--red)"],
+      ["Trauma", 8.4, "var(--red)"],
+      ["Night Float", 7.2, "var(--orange)"],
+      ["Inpatient Wards", 5.1, "var(--yellow)"],
+      ["Clinic / Ambulatory", 2.8, "var(--green)"]
+    ],
+    actions: [
+      {
+        title: "Emergency Medicine Residency",
+        items: ["Burnout risk 39% (High)", "Sleep deficit worsening", "Excessive night shift burden"],
+        rec: "Recommended: Schedule review and targeted coaching",
+        badge: "circle-alert",
+        tone: "red"
+      },
+      {
+        title: "ICU Nursing",
+        items: ["Compassion fatigue elevated", "Overtime increased 22%"],
+        rec: "Recommended: Additional staffing support",
+        badge: "triangle-alert",
+        tone: "orange"
+      },
+      {
+        title: "Family Medicine Residency",
+        items: ["Strong recovery trends", "Lowest burnout risk"],
+        rec: "Recommended: Identify best practices for system-wide adoption",
+        badge: "circle-check",
+        tone: "green"
+      }
+    ],
+    patient: [
+      ["HCAHPS Score", "91%", "82%", "-9 pts"],
+      ["Safety Events (per 1k pt days)", "4", "11", "+175%"],
+      ["Medication Errors (per 1k pt days)", "2", "7", "+250%"],
+      ["Patient Complaints (per 1k pt days)", "3", "12", "+300%"]
+    ],
+    finance: [
+      ["Nurse Turnover", "$1,800,000"],
+      ["Resident / Fellow Attrition", "$450,000"],
+      ["Overtime Expense", "$650,000"],
+      ["Vacancy Impact", "$300,000"]
+    ],
+    nursingBars: [
+      ["Compassion Fatigue Risk", 29, "var(--red)"],
+      ["Moral Distress Risk", 22, "var(--orange)"],
+      ["Burnout Risk", 31, "var(--red)"],
+      ["High Overtime Utilization", 18, "var(--orange)"]
+    ],
+    recoveryPoints: [
+      [80, 132, 62, "Dec '23"],
+      [138, 120, 65, "Jan '24"],
+      [196, 108, 68, "Feb '24"],
+      [254, 96, 71, "Mar '24"],
+      [312, 116, 66, "Apr '24"],
+      [370, 84, 71, "May '24"]
+    ]
+  },
 
-const nursingBars = [
-  ["Compassion Fatigue Risk", 29, "var(--red)"],
-  ["Moral Distress Risk", 22, "var(--orange)"],
-  ["Burnout Risk", 31, "var(--red)"],
-  ["High Overtime Utilization", 18, "var(--orange)"]
-];
+  main: {
+    metricsBase: [
+      { label: "Workforce Sustainability Index", value: "74", suffix: "/100", icon: "chart-column", iconClass: "ring" },
+      { label: "Burnout Risk (Next 90 Days)", value: "29", suffix: "%", icon: "user-round", iconClass: "red fill" },
+      { label: "Retention Risk", value: "17", suffix: "%", icon: "users-round", iconClass: "orange" },
+      { label: "Sleep Recovery Score", value: "68", suffix: "/100", icon: "moon", iconClass: "violet fill" },
+      { label: "Patient Experience (Press Ganey)", value: "86", suffix: "%", icon: "heart-pulse", iconClass: "teal" },
+      { label: "Est. Annual Turnover Exposure", value: "$2.6", suffix: "M", icon: "dollar-sign", iconClass: "green" }
+    ],
+    wellbeingBase: [
+      { label: "Avg Sleep (hours)", value: "5.8", icon: "bed", tone: "violet" },
+      { label: "Stress Index (0–100)", value: "67", icon: "brain", tone: "orange" },
+      { label: "Recovery Index (0–100)", value: "66", icon: "heart-pulse", tone: "green" },
+      { label: "Burnout Risk Score (0–100)", value: "64", icon: "gauge", tone: "red" }
+    ],
+    stress: [
+      ["Sleep Deficit", 41, "var(--red)"],
+      ["Overtime Burden", 27, "var(--orange)"],
+      ["Night Shift Frequency", 16, "var(--yellow)"],
+      ["Staffing Shortages", 10, "var(--teal)"],
+      ["Moral Distress", 6, "var(--violet)"]
+    ],
+    staffing: [
+      ["Avg Weekly Hours", "61", "<55", "bad"],
+      ["Avg Overtime Hours", "9.6", "<5", "bad"],
+      ["Night Shifts / Month", "7.9", "<6", "bad"],
+      ["Sick Calls (unplanned)", "38", "<20", "bad"],
+      ["Vacancy Rate", "13%", "<8%", "bad"]
+    ],
+    stability: [
+      ["Turnover Rate (YTD)", "16%", "bad"],
+      ["Retention Rate (YTD)", "84%", "good"],
+      ["Transfer Requests (YTD)", "12", ""],
+      ["FMLA Requests (YTD)", "15", ""],
+      ["Open Positions", "29", "bad"]
+    ],
+    forecast: [
+      ["Residents", 33, "graduation-cap"],
+      ["Fellows", 22, "award"],
+      ["Nursing", 37, "user-round"],
+      ["Entire Organization", 29, "users-round"]
+    ],
+    heat: [
+      ["Emergency Medicine Residents", "High", 5, "red"],
+      ["ICU Nursing", "High", 5, "red"],
+      ["Surgical Residents", "High", 5, "red"],
+      ["Internal Medicine Residents", "Moderate", 4, "orange"],
+      ["NICU Nursing", "Moderate", 3, "orange"],
+      ["Family Medicine Residents", "Moderate", 3, "orange"],
+      ["Outpatient Nursing", "Low", 2, "green"]
+    ],
+    programs: [
+      ["Family Medicine", 84, "up", "good"],
+      ["Pediatrics", 80, "up", "good"],
+      ["Internal Medicine", 74, "down", "bad"],
+      ["Surgery", 65, "down", "bad"],
+      ["Emergency Medicine", 59, "down", "bad"]
+    ],
+    nurses: [
+      ["Oncology", 81, "up", "good"],
+      ["Pediatrics", 78, "up", "good"],
+      ["Med Surg", 75, "down", "bad"],
+      ["ICU", 62, "down", "bad"],
+      ["Emergency Department", 58, "down", "bad"]
+    ],
+    fatigue: [
+      ["ICU", 9.5, "var(--red)"],
+      ["Trauma", 9.0, "var(--red)"],
+      ["Night Float", 7.8, "var(--orange)"],
+      ["Inpatient Wards", 5.6, "var(--yellow)"],
+      ["Clinic / Ambulatory", 3.2, "var(--green)"]
+    ],
+    actions: [
+      {
+        title: "Emergency Medicine Residency",
+        items: ["Burnout risk 44% (High)", "Sleep deficit worsening", "Excessive night shift burden"],
+        rec: "Recommended: Schedule review and targeted coaching",
+        badge: "circle-alert",
+        tone: "red"
+      },
+      {
+        title: "ICU Nursing",
+        items: ["Compassion fatigue elevated", "Overtime increased 28%"],
+        rec: "Recommended: Additional staffing support",
+        badge: "triangle-alert",
+        tone: "orange"
+      },
+      {
+        title: "Family Medicine Residency",
+        items: ["Comparatively stable trends", "Lowest burnout among main campus programs"],
+        rec: "Recommended: Monitor and reassess next cycle",
+        badge: "circle-check",
+        tone: "green"
+      }
+    ],
+    patient: [
+      ["HCAHPS Score", "89%", "78%", "-11 pts"],
+      ["Safety Events (per 1k pt days)", "5", "13", "+160%"],
+      ["Medication Errors (per 1k pt days)", "3", "8", "+167%"],
+      ["Patient Complaints (per 1k pt days)", "4", "14", "+250%"]
+    ],
+    finance: [
+      ["Nurse Turnover", "$1,450,000"],
+      ["Resident / Fellow Attrition", "$380,000"],
+      ["Overtime Expense", "$540,000"],
+      ["Vacancy Impact", "$230,000"]
+    ],
+    nursingBars: [
+      ["Compassion Fatigue Risk", 34, "var(--red)"],
+      ["Moral Distress Risk", 25, "var(--orange)"],
+      ["Burnout Risk", 36, "var(--red)"],
+      ["High Overtime Utilization", 22, "var(--orange)"]
+    ],
+    recoveryPoints: [
+      [80, 148, 58, "Dec '23"],
+      [138, 140, 60, "Jan '24"],
+      [196, 128, 63, "Feb '24"],
+      [254, 120, 65, "Mar '24"],
+      [312, 136, 61, "Apr '24"],
+      [370, 116, 66, "May '24"]
+    ]
+  },
 
-const wellbeing = [
-  ["Avg Sleep (hours)", "6.1", "▼ 0.3 from Apr", "down", "bed", "violet"],
-  ["Stress Index (0–100)", "62", "▼ 4 from Apr", "down", "brain", "orange"],
-  ["Recovery Index (0–100)", "71", "▲ 5 from Apr", "up", "heart-pulse", "green"],
-  ["Burnout Risk Score (0–100)", "59", "▼ 3 from Apr", "up", "gauge", "red"]
-];
+  north: {
+    metricsBase: [
+      { label: "Workforce Sustainability Index", value: "85", suffix: "/100", icon: "chart-column", iconClass: "ring" },
+      { label: "Burnout Risk (Next 90 Days)", value: "14", suffix: "%", icon: "user-round", iconClass: "red fill" },
+      { label: "Retention Risk", value: "9", suffix: "%", icon: "users-round", iconClass: "orange" },
+      { label: "Sleep Recovery Score", value: "79", suffix: "/100", icon: "moon", iconClass: "violet fill" },
+      { label: "Patient Experience (Press Ganey)", value: "93", suffix: "%", icon: "heart-pulse", iconClass: "teal" },
+      { label: "Est. Annual Turnover Exposure", value: "$0.4", suffix: "M", icon: "dollar-sign", iconClass: "green" }
+    ],
+    wellbeingBase: [
+      { label: "Avg Sleep (hours)", value: "7.0", icon: "bed", tone: "violet" },
+      { label: "Stress Index (0–100)", value: "48", icon: "brain", tone: "orange" },
+      { label: "Recovery Index (0–100)", value: "81", icon: "heart-pulse", tone: "green" },
+      { label: "Burnout Risk Score (0–100)", value: "38", icon: "gauge", tone: "red" }
+    ],
+    stress: [
+      ["Sleep Deficit", 26, "var(--red)"],
+      ["Overtime Burden", 17, "var(--orange)"],
+      ["Night Shift Frequency", 9, "var(--yellow)"],
+      ["Staffing Shortages", 15, "var(--teal)"],
+      ["Moral Distress", 5, "var(--violet)"]
+    ],
+    staffing: [
+      ["Avg Weekly Hours", "51", "<55", ""],
+      ["Avg Overtime Hours", "3.2", "<5", ""],
+      ["Night Shifts / Month", "3.5", "<6", ""],
+      ["Sick Calls (unplanned)", "9", "<20", ""],
+      ["Vacancy Rate", "7%", "<8%", ""]
+    ],
+    stability: [
+      ["Turnover Rate (YTD)", "8%", "good"],
+      ["Retention Rate (YTD)", "92%", "good"],
+      ["Transfer Requests (YTD)", "2", ""],
+      ["FMLA Requests (YTD)", "3", ""],
+      ["Open Positions", "5", ""]
+    ],
+    forecast: [
+      ["Residents", 12, "graduation-cap"],
+      ["Fellows", 8, "award"],
+      ["Nursing", 17, "user-round"],
+      ["Entire Organization", 14, "users-round"]
+    ],
+    heat: [
+      ["Family Medicine Residents", "Low", 2, "green"],
+      ["Outpatient Nursing", "Low", 1, "green"],
+      ["Internal Medicine Residents", "Low", 2, "green"],
+      ["Pediatrics Nursing", "Moderate", 3, "orange"],
+      ["Urgent Care Nursing", "Moderate", 3, "orange"]
+    ],
+    programs: [
+      ["Family Medicine", 92, "up", "good"],
+      ["Internal Medicine", 88, "up", "good"],
+      ["Pediatrics", 87, "up", "good"],
+      ["Urgent Care", 81, "up", "good"],
+      ["Behavioral Health", 77, "down", "bad"]
+    ],
+    nurses: [
+      ["Outpatient", 90, "up", "good"],
+      ["Urgent Care", 85, "up", "good"],
+      ["Pediatrics", 84, "up", "good"],
+      ["Behavioral Health", 76, "down", "bad"],
+      ["Float Pool", 73, "down", "bad"]
+    ],
+    fatigue: [
+      ["Urgent Care", 5.2, "var(--yellow)"],
+      ["Float Pool", 4.8, "var(--yellow)"],
+      ["Behavioral Health", 4.1, "var(--yellow)"],
+      ["Outpatient Clinics", 2.3, "var(--green)"],
+      ["Pediatrics", 2.0, "var(--green)"]
+    ],
+    actions: [
+      {
+        title: "Behavioral Health Program",
+        items: ["Slight uptick in overtime", "Watch caseload growth"],
+        rec: "Recommended: Monitor staffing ratios next cycle",
+        badge: "triangle-alert",
+        tone: "orange"
+      },
+      {
+        title: "Float Pool Nursing",
+        items: ["Coverage gaps on weekends"],
+        rec: "Recommended: Cross-train 2 additional floats",
+        badge: "triangle-alert",
+        tone: "orange"
+      },
+      {
+        title: "Family Medicine",
+        items: ["Strongest sustainability score site-wide", "Low burnout, high retention"],
+        rec: "Recommended: Use as a model for other sites",
+        badge: "circle-check",
+        tone: "green"
+      }
+    ],
+    patient: [
+      ["HCAHPS Score", "95%", "89%", "-6 pts"],
+      ["Safety Events (per 1k pt days)", "1", "3", "+200%"],
+      ["Medication Errors (per 1k pt days)", "1", "2", "+100%"],
+      ["Patient Complaints (per 1k pt days)", "1", "4", "+300%"]
+    ],
+    finance: [
+      ["Nurse Turnover", "$180,000"],
+      ["Resident / Fellow Attrition", "$60,000"],
+      ["Overtime Expense", "$95,000"],
+      ["Vacancy Impact", "$65,000"]
+    ],
+    nursingBars: [
+      ["Compassion Fatigue Risk", 14, "var(--orange)"],
+      ["Moral Distress Risk", 9, "var(--teal)"],
+      ["Burnout Risk", 15, "var(--orange)"],
+      ["High Overtime Utilization", 7, "var(--teal)"]
+    ],
+    recoveryPoints: [
+      [80, 100, 70, "Dec '23"],
+      [138, 88, 73, "Jan '24"],
+      [196, 80, 75, "Feb '24"],
+      [254, 72, 77, "Mar '24"],
+      [312, 76, 76, "Apr '24"],
+      [370, 56, 81, "May '24"]
+    ]
+  }
+};
+
+/* ---- Working state (populated by applyState) ------------------------------ */
+
+let metrics = [];
+let wellbeing = [];
+let stress = [];
+let staffing = [];
+let stability = [];
+let forecast = [];
+let heat = [];
+let programs = [];
+let nurses = [];
+let fatigue = [];
+let actions = [];
+let patient = [];
+let finance = [];
+let nursingBars = [];
+let recoveryPoints = [];
+let rankTrendLabel = "Apr";
 
 function el(tag, className, html) {
   const node = document.createElement(tag);
@@ -137,6 +488,31 @@ function trendText(text) {
   if (text.startsWith("▲")) return icon("caret-up", "solid xs") + text.slice(1);
   if (text.startsWith("▼")) return icon("caret-down", "solid xs") + text.slice(1);
   return text;
+}
+
+function parseCurrency(str) {
+  return Number(String(str).replace(/[^0-9.-]/g, "")) || 0;
+}
+
+function formatCurrency(n) {
+  return "$" + Math.round(n).toLocaleString("en-US");
+}
+
+function sumFinance(rows) {
+  return rows.reduce((sum, [, cost]) => sum + parseCurrency(cost), 0);
+}
+
+/* Builds the alert banner's driver sentence from whichever stress factors and
+   heat-map areas are currently highest, so it stays consistent with the rest
+   of the page under every filter/compare combination. */
+function buildAlertSummary(stressData, heatData) {
+  const topStress = [...stressData].sort((a, b) => b[1] - a[1]).slice(0, 3).map(s => s[0].toLowerCase());
+  const topHeat = [...heatData].sort((a, b) => b[2] - a[2]).slice(0, 2).map(h => h[0]);
+  const driverText = topStress.length > 1
+    ? `${topStress.slice(0, -1).join(", ")}, and ${topStress[topStress.length - 1]}`
+    : topStress[0];
+  const areaText = topHeat.length > 1 ? topHeat.join(" and ") : topHeat[0];
+  return `Primary drivers are ${driverText}, concentrated in ${areaText}.`;
 }
 
 function renderMetrics() {
@@ -196,7 +572,7 @@ function renderHeat() {
 function renderRank(id, label, rows) {
   renderTable(
     id,
-    [label, "Sustainability Score", "Trend (vs Apr)"],
+    [label, "Sustainability Score", `Trend (vs ${rankTrendLabel})`],
     rows.map(([name, score, trend, cls]) => [name, score, icon(trend === "up" ? "caret-up" : "caret-down", "solid sm"), cls])
   );
 }
@@ -233,19 +609,14 @@ function renderActions() {
 }
 
 function renderTrend() {
-  const points = [
-    [80, 132, 62, "Dec '23"],
-    [138, 120, 65, "Jan '24"],
-    [196, 108, 68, "Feb '24"],
-    [254, 96, 71, "Mar '24"],
-    [312, 116, 66, "Apr '24"],
-    [370, 84, 71, "May '24"]
-  ];
-  document.querySelector("#trendDots").innerHTML = points.map(([x, y, val, label], i) => `
-    <circle class="point ${i === 5 ? "final" : ""}" cx="${x}" cy="${y}" r="${i === 5 ? 20 : 6}"></circle>
-    <text class="label ${i === 5 ? "final" : ""}" x="${x - 8}" y="${i === 5 ? y + 5 : y - 13}">${val}</text>
+  document.querySelector("#trendDots").innerHTML = recoveryPoints.map(([x, y, val, label], i) => {
+    const final = i === recoveryPoints.length - 1;
+    return `
+    <circle class="point ${final ? "final" : ""}" cx="${x}" cy="${y}" r="${final ? 20 : 6}"></circle>
+    <text class="label ${final ? "final" : ""}" x="${x - 8}" y="${final ? y + 5 : y - 13}">${val}</text>
     <text class="label" x="${x - 20}" y="215" style="font-size:10px">${label}</text>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function renderNursing() {
@@ -271,39 +642,29 @@ function renderWellbeing() {
   `).join("");
 }
 
-renderMetrics();
-renderLegend();
-renderTable("#staffTable", ["Metric", "Current", "Target"], staffing);
-renderTable("#stabilityTable", ["Metric", "Current"], stability);
-renderForecast();
-renderHeat();
-renderRank("#programTable", "Program", programs);
-renderRank("#nurseTable", "Unit", nurses);
-renderFatigue();
-renderActions();
-renderTrend();
-/* Only the Difference column carries the red signal here — the Low/High Risk
-   counts are plain figures. */
-renderTable("#patientTable", ["Metric", "Low Risk Units", "High Risk Units", "Difference"], patient.map(row => [...row, "bad"]), 3);
-renderTable("#financeTable", ["Category", "Annual Cost"], finance.map(row => [...row, ""]));
-renderNursing();
-renderWellbeing();
+function renderFinanceTotal() {
+  const target = document.querySelector("#financeTotal");
+  if (target) target.textContent = formatCurrency(sumFinance(finance));
+}
+
+function renderAlertSummary() {
+  const burnout = metrics[1];
+  const exposure = metrics[5];
+  const pctEl = document.querySelector("#alertBurnoutPct");
+  const expEl = document.querySelector("#alertExposure");
+  const driversEl = document.querySelector("#alertDrivers");
+  if (pctEl && burnout) pctEl.textContent = `${burnout.value}${burnout.suffix}`;
+  if (expEl && exposure) expEl.textContent = `${exposure.value}${exposure.suffix}`;
+  if (driversEl) driversEl.textContent = buildAlertSummary(stress, heat);
+}
 
 /* =========================================================================
    Sidebar tab views
    Each tab regroups the Executive Overview's own boxes by theme and swaps
    them into place — no new content. The builders below rebuild those exact
-   boxes as standalone cards from the same data the Overview uses.
+   boxes as standalone cards from the same working data the Overview uses,
+   so they stay in sync whenever applyState() runs.
    ========================================================================= */
-
-const recoveryPoints = [
-  [80, 132, 62, "Dec '23"],
-  [138, 120, 65, "Jan '24"],
-  [196, 108, 68, "Feb '24"],
-  [254, 96, 71, "Mar '24"],
-  [312, 116, 66, "Apr '24"],
-  [370, 84, 71, "May '24"]
-];
 
 function legendInner() {
   return stress.map(([name, value, color]) =>
@@ -323,7 +684,7 @@ function tableInner(headings, rows, markFrom = 1) {
 
 function rankInner(label, rows) {
   return tableInner(
-    [label, "Sustainability Score", "Trend (vs Apr)"],
+    [label, "Sustainability Score", `Trend (vs ${rankTrendLabel})`],
     rows.map(([name, score, trend, cls]) => [name, score, icon(trend === "up" ? "caret-up" : "caret-down", "solid sm"), cls])
   );
 }
@@ -526,7 +887,7 @@ function financeCard() {
     <article class="card finance">
       <div class="head"><div><h2>Financial Impact</h2><p>Estimated Annual Workforce Exposure</p></div>${icon("info", "info")}</div>
       <table>${tableInner(["Category", "Annual Cost"], finance.map(row => [...row, ""]))}</table>
-      <div class="total"><span>Total Estimated Exposure</span><strong>$3,200,000</strong></div>
+      <div class="total"><span>Total Estimated Exposure</span><strong>${formatCurrency(sumFinance(finance))}</strong></div>
     </article>`;
 }
 
@@ -570,7 +931,155 @@ document.querySelector(".nav").addEventListener("click", event => {
   if (button) switchView(button.dataset.view);
 });
 
-renderViews();
+/* =========================================================================
+   applyState()
+   Merges the active filter's base data with the active compare option's
+   deltas into the working variables above, then re-runs every render
+   function so the entire Executive Overview (plus every sidebar tab)
+   reflects the current selection.
+   ========================================================================= */
+
+function applyState() {
+  const filterData = filterDatasets[activeFilterId];
+  const compareData = compareDeltas[activeCompareId];
+  const compareMeta = compareOptions.find(o => o.id === activeCompareId);
+
+  metrics = filterData.metricsBase.map((m, i) => ({
+    ...m,
+    change: compareData.metrics[i].change,
+    tone: compareData.metrics[i].tone
+  }));
+  wellbeing = filterData.wellbeingBase.map((w, i) => [
+    w.label,
+    w.value,
+    compareData.wellbeing[i].change,
+    compareData.wellbeing[i].trend,
+    w.icon,
+    w.tone
+  ]);
+  stress = filterData.stress;
+  staffing = filterData.staffing;
+  stability = filterData.stability;
+  forecast = filterData.forecast;
+  heat = filterData.heat;
+  programs = filterData.programs;
+  nurses = filterData.nurses;
+  fatigue = filterData.fatigue;
+  actions = filterData.actions;
+  patient = filterData.patient;
+  finance = filterData.finance;
+  nursingBars = filterData.nursingBars;
+  recoveryPoints = filterData.recoveryPoints;
+  rankTrendLabel = compareMeta.short;
+
+  renderMetrics();
+  renderLegend();
+  renderTable("#staffTable", ["Metric", "Current", "Target"], staffing);
+  renderTable("#stabilityTable", ["Metric", "Current"], stability);
+  renderForecast();
+  renderHeat();
+  renderRank("#programTable", "Program", programs);
+  renderRank("#nurseTable", "Unit", nurses);
+  renderFatigue();
+  renderActions();
+  renderTrend();
+  /* Only the Difference column carries the red signal here — the Low/High Risk
+     counts are plain figures. */
+  renderTable("#patientTable", ["Metric", "Low Risk Units", "High Risk Units", "Difference"], patient.map(row => [...row, "bad"]), 3);
+  renderTable("#financeTable", ["Category", "Annual Cost"], finance.map(row => [...row, ""]));
+  renderFinanceTotal();
+  renderNursing();
+  renderWellbeing();
+  renderAlertSummary();
+  renderViews();
+}
+
+/* =========================================================================
+   Toolbar controls — Compare-to and Filters dropdowns
+   ========================================================================= */
+
+function closeAllMenus() {
+  document.querySelectorAll(".dropdown-menu.open").forEach(menu => menu.classList.remove("open"));
+  document.querySelectorAll('.pill[aria-expanded="true"]').forEach(button => button.setAttribute("aria-expanded", "false"));
+}
+
+function renderCompareMenu() {
+  const host = document.querySelector("#compareMenu");
+  if (!host) return;
+  host.innerHTML = compareOptions.map(opt => `
+    <button type="button" class="dropdown-item ${opt.id === activeCompareId ? "active" : ""}" data-compare="${opt.id}">
+      <span>${opt.pillLabel.replace("Compare to: ", "")}</span><span class="check">✓</span>
+    </button>
+  `).join("");
+}
+
+function renderFilterMenu() {
+  const host = document.querySelector("#filterMenu");
+  if (!host) return;
+  host.innerHTML = filterOptions.map(opt => `
+    <button type="button" class="dropdown-item ${opt.id === activeFilterId ? "active" : ""}" data-filter="${opt.id}">
+      <span>${opt.label}</span><span class="check">✓</span>
+    </button>
+  `).join("");
+}
+
+function initToolbarControls() {
+  const compareBtn = document.querySelector("#compareBtn");
+  const compareMenu = document.querySelector("#compareMenu");
+  const compareLabel = document.querySelector("#compareLabel");
+  const filterBtn = document.querySelector("#filterBtn");
+  const filterMenu = document.querySelector("#filterMenu");
+  const filterBadge = document.querySelector("#filterBadge");
+  if (!compareBtn || !compareMenu || !filterBtn || !filterMenu) return;
+
+  renderCompareMenu();
+  renderFilterMenu();
+
+  compareBtn.addEventListener("click", event => {
+    event.stopPropagation();
+    const willOpen = !compareMenu.classList.contains("open");
+    closeAllMenus();
+    compareMenu.classList.toggle("open", willOpen);
+    compareBtn.setAttribute("aria-expanded", String(willOpen));
+  });
+
+  filterBtn.addEventListener("click", event => {
+    event.stopPropagation();
+    const willOpen = !filterMenu.classList.contains("open");
+    closeAllMenus();
+    filterMenu.classList.toggle("open", willOpen);
+    filterBtn.setAttribute("aria-expanded", String(willOpen));
+  });
+
+  compareMenu.addEventListener("click", event => {
+    const item = event.target.closest("[data-compare]");
+    if (!item) return;
+    activeCompareId = item.dataset.compare;
+    const opt = compareOptions.find(o => o.id === activeCompareId);
+    if (compareLabel) compareLabel.textContent = opt.pillLabel;
+    renderCompareMenu();
+    closeAllMenus();
+    applyState();
+  });
+
+  filterMenu.addEventListener("click", event => {
+    const item = event.target.closest("[data-filter]");
+    if (!item) return;
+    activeFilterId = item.dataset.filter;
+    renderFilterMenu();
+    if (filterBadge) filterBadge.hidden = activeFilterId === "all";
+    closeAllMenus();
+    applyState();
+  });
+
+  document.addEventListener("click", () => closeAllMenus());
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closeAllMenus();
+  });
+}
+
+initToolbarControls();
+applyState();
 
 /* =========================================================================
    Workforce Assistant (chatbot)

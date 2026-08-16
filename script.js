@@ -1115,6 +1115,15 @@ function view(id, cols, cards) {
 }
 
 function renderViews() {
+  /* renderViews() fully replaces #view-host's contents, so whichever tab was
+     on screen before this call loses its "active" class in the process
+     (the freshly generated markup never carries it). Capture it first and
+     re-apply afterward, so changing Compare-to/Filters while looking at a
+     subpanel keeps that subpanel visible — with freshly updated data —
+     instead of it silently going blank. */
+  const currentlyActive = document.querySelector(".view.active");
+  const activeId = currentlyActive ? currentlyActive.id : "v-overview";
+
   document.querySelector("#view-host").innerHTML =
     view("v-risk", "cols-2", [heatCard(), forecastCard(), riskDistributionCard(), topRiskCard()]) +
     view("v-drivers", "cols-2", [driversCard(), opsCard(), stabilitySplitCard(), staffingLoadCard()]) +
@@ -1124,13 +1133,25 @@ function renderViews() {
     view("v-patient", "cols-2", [patientCard(), patientDifferenceCard()]) +
     view("v-finance", "cols-2", [financeCard(), financeDonutCard()]) +
     view("v-interventions", "cols-2", [actionsCard(), interventionPriorityCard()]);
+
+  setActiveView(activeId);
+}
+
+/* Toggles which .view is shown and which nav item is highlighted, without
+   touching scroll position — used both by real navigation (switchView,
+   below) and to silently re-apply whichever tab was already open after
+   renderViews() rebuilds the tab markup from scratch. */
+function setActiveView(id) {
+  const target = id && document.getElementById(id);
+  if (!target) return;
+  document.querySelectorAll(".view").forEach(section => section.classList.toggle("active", section === target));
+  document.querySelectorAll(".nav-item").forEach(button => button.classList.toggle("active", button.dataset.view === id));
 }
 
 function switchView(id) {
   const target = id && document.getElementById(id);
   if (!target) return;
-  document.querySelectorAll(".view").forEach(section => section.classList.toggle("active", section === target));
-  document.querySelectorAll(".nav-item").forEach(button => button.classList.toggle("active", button.dataset.view === id));
+  setActiveView(id);
   window.scrollTo(0, 0);
 }
 
@@ -1275,7 +1296,7 @@ function initToolbarControls() {
     if (!item) return;
     activeFilterId = item.dataset.filter;
     renderFilterMenu();
-    if (filterBadge) filterBadge.hidden = activeFilterId === "all";
+    if (filterBadge) filterBadge.classList.toggle("visible", activeFilterId !== "all");
     closeAllMenus();
     applyState();
   });

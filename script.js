@@ -1,5 +1,5 @@
 /* =========================================================================
-   Data model (Just changing this to trigger a new run)
+   Data model
    -------------------------------------------------------------------------
    Two independent axes drive every visual on the Executive Overview:
 
@@ -523,7 +523,7 @@ function renderMetrics() {
       <div class="metric-body">
         <div class="icon ${item.iconClass}">${icon(item.icon)}</div>
         <div>
-        <div class="value">${item.value}<small style="display:inline">${item.suffix}</small></div>
+        <div class="value">${item.value}<small style="display:inline; white-space:nowrap">${item.suffix}</small></div>
         <small class="${item.tone}">${trendText(item.change)}</small>
         </div>
       </div>

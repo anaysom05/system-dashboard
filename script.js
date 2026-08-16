@@ -571,3 +571,84 @@ document.querySelector(".nav").addEventListener("click", event => {
 });
 
 renderViews();
+
+/* =========================================================================
+   Workforce Assistant (chatbot)
+   A ChatGPT-style widget scoped to the Executive Overview. The three
+   suggested prompts are picked from the month's most notable figures
+   (burnout risk areas, top stress driver, financial exposure) and always
+   return the same hard-coded answer. Any freeform question — regardless of
+   content — cycles through three fixed fallback responses on Enter/Send.
+   ========================================================================= */
+
+const chatSuggestions = [
+  {
+    q: "Which areas are at highest burnout risk?",
+    a: "Emergency Medicine Residents and ICU Nursing are both flagged High risk (5/5) on this month's heat map, with Surgical Residents close behind at 4/5. These three areas are the main contributors to the 26% elevated burnout figure org-wide."
+  },
+  {
+    q: "What's driving workforce stress this month?",
+    a: "Sleep Deficit is the top driver at 37%, followed by Overtime Burden at 24% and Night Shift Frequency at 18%. Together those three account for nearly 80% of reported stress this month."
+  },
+  {
+    q: "What's the estimated financial exposure?",
+    a: "Total estimated annual exposure is $3.2M: $1.8M from nurse turnover, $650K in overtime expense, $450K in resident/fellow attrition, and $300K from vacancy impact — up $420K from April."
+  }
+];
+
+const chatFallbacks = [
+  "Based on this month's data, Emergency Medicine Residents and ICU Nursing remain the two highest-risk areas, both flagged High on the heat map.",
+  "The Workforce Sustainability Index is currently 78/100, up 4 points from April, while burnout risk over the next 90 days sits at 24%.",
+  "I can speak to workforce risk, stress drivers, staffing, financial exposure, and wellbeing trends from this month's report — try one of the suggestions above, or ask about a specific unit."
+];
+
+let chatFallbackIndex = 0;
+
+function addChatMessage(text, sender) {
+  const host = document.querySelector("#chatMessages");
+  if (!host) return;
+  host.appendChild(el("div", `chat-msg ${sender}`, text));
+  host.scrollTop = host.scrollHeight;
+}
+
+function renderChatSuggestions() {
+  const host = document.querySelector("#chatSuggestions");
+  if (!host) return;
+  host.innerHTML = chatSuggestions.map((item, i) => `<button type="button" class="chat-chip" data-chip="${i}">${item.q}</button>`).join("");
+  host.querySelectorAll(".chat-chip").forEach(button => {
+    button.addEventListener("click", () => {
+      const item = chatSuggestions[Number(button.dataset.chip)];
+      addChatMessage(item.q, "user");
+      window.setTimeout(() => addChatMessage(item.a, "bot"), 280);
+    });
+  });
+}
+
+function initChatbot() {
+  const input = document.querySelector("#chatInput");
+  const send = document.querySelector("#chatSend");
+  if (!input || !send) return;
+
+  addChatMessage("Hi, I'm your Workforce Assistant. Ask me about this month's data, or tap a suggestion below.", "bot");
+  renderChatSuggestions();
+
+  function handleSend() {
+    const text = input.value.trim();
+    if (!text) return;
+    addChatMessage(text, "user");
+    input.value = "";
+    const reply = chatFallbacks[chatFallbackIndex % chatFallbacks.length];
+    chatFallbackIndex += 1;
+    window.setTimeout(() => addChatMessage(reply, "bot"), 280);
+  }
+
+  send.addEventListener("click", handleSend);
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSend();
+    }
+  });
+}
+
+initChatbot();

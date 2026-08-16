@@ -229,7 +229,7 @@ h1 {
 }
 
 .pill-badge {
-  display: inline-grid;
+  display: none;
   place-items: center;
   min-width: 16px;
   height: 16px;
@@ -241,6 +241,14 @@ h1 {
   font-weight: 700;
   line-height: 1;
   padding: 0 4px;
+}
+
+/* Toggled purely by JS via this class, rather than the [hidden] attribute —
+   an author-level `display` rule on an element always wins over the
+   user-agent's default `[hidden] { display: none }`, so mixing the two
+   made the badge impossible to actually hide. */
+.pill-badge.visible {
+  display: inline-grid;
 }
 
 .dropdown-menu {

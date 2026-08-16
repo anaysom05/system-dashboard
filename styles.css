@@ -406,7 +406,7 @@ h1 {
 
 .metric {
   display: grid;
-  grid-template-rows: 42px 1fr;
+  grid-template-rows: auto 1fr;
   align-items: center;
   min-height: 134px;
   border: 1px solid var(--line);
@@ -427,12 +427,14 @@ h1 {
   min-height: 31px;
   text-align: center;
   align-self: start;
+  overflow-wrap: break-word;
 }
 
 .metric-body {
   display: flex;
   align-items: center;
   gap: 11px;
+  min-width: 0;
 }
 
 .metric .value {
@@ -447,7 +449,9 @@ h1 {
   color: var(--ink);
   font-size: 9px;
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.3;
 }
 
 .icon {

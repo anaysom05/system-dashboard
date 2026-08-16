@@ -629,6 +629,7 @@ function initChatbot() {
   const send = document.querySelector("#chatSend");
   const fab = document.querySelector("#chatFab");
   const panel = document.querySelector("#chatPanel");
+  const closeBtn = document.querySelector("#chatPanelClose");
   if (!input || !send || !fab || !panel) return;
 
   addChatMessage("Hi, I'm your Workforce Assistant. Ask me about this month's data, or tap a suggestion below.", "bot");
@@ -662,6 +663,7 @@ function initChatbot() {
   }
 
   fab.addEventListener("click", () => setOpen(!panel.classList.contains("open")));
+  if (closeBtn) closeBtn.addEventListener("click", () => setOpen(false));
 
   document.addEventListener("click", event => {
     if (!panel.classList.contains("open")) return;

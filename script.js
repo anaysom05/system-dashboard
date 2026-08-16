@@ -627,7 +627,9 @@ function renderChatSuggestions() {
 function initChatbot() {
   const input = document.querySelector("#chatInput");
   const send = document.querySelector("#chatSend");
-  if (!input || !send) return;
+  const fab = document.querySelector("#chatFab");
+  const panel = document.querySelector("#chatPanel");
+  if (!input || !send || !fab || !panel) return;
 
   addChatMessage("Hi, I'm your Workforce Assistant. Ask me about this month's data, or tap a suggestion below.", "bot");
   renderChatSuggestions();
@@ -648,6 +650,27 @@ function initChatbot() {
       event.preventDefault();
       handleSend();
     }
+  });
+
+  /* Floating launcher: toggles the panel open/closed without affecting page
+     layout, since both are position:fixed and sit outside the document flow. */
+  function setOpen(isOpen) {
+    panel.classList.toggle("open", isOpen);
+    fab.classList.toggle("open", isOpen);
+    fab.setAttribute("aria-expanded", String(isOpen));
+    if (isOpen) window.setTimeout(() => input.focus(), 160);
+  }
+
+  fab.addEventListener("click", () => setOpen(!panel.classList.contains("open")));
+
+  document.addEventListener("click", event => {
+    if (!panel.classList.contains("open")) return;
+    if (panel.contains(event.target) || fab.contains(event.target)) return;
+    setOpen(false);
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && panel.classList.contains("open")) setOpen(false);
   });
 }
 

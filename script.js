@@ -1311,36 +1311,272 @@ initToolbarControls();
 applyState();
 
 /* =========================================================================
-   Workforce Assistant (chatbot)
-   A ChatGPT-style widget scoped to the Executive Overview. The three
-   suggested prompts are picked from the month's most notable figures
-   (burnout risk areas, top stress driver, financial exposure) and always
-   return the same hard-coded answer. Any freeform question — regardless of
+   AI Chief Wellness Officer (chatbot)
+   A ChatGPT-style widget scoped to the Executive Overview. Ten topic
+   categories are shown as chips (top 3 first, the rest behind a "+N more"
+   toggle); picking a category either asks its one sample question directly,
+   or — for categories with more than one — reveals those questions as a
+   second level of chips first. Every sample question returns the same
+   hard-coded, pre-written answer. Any freeform question — regardless of
    content — cycles through three fixed fallback responses on Enter/Send.
    ========================================================================= */
 
-const chatSuggestions = [
+const chwoCategories = [
   {
-    q: "Which areas are at highest burnout risk?",
-    a: "Emergency Medicine Residents and ICU Nursing are both flagged High risk (5/5) on this month's heat map, with Surgical Residents close behind at 4/5. These three areas are the main contributors to the 26% elevated burnout figure org-wide."
+    id: "workforce-risk",
+    title: "Workforce Risk Intelligence",
+    questions: [
+      {
+        q: "Which departments need my attention today?",
+        a: "<strong>Priority Workforce Risk Summary</strong><br><br>" +
+           "<strong>1. Emergency Medicine</strong> — Risk Level: <strong>HIGH ▲</strong><br>" +
+           "• Burnout risk increased 18% over the last 14 days<br>" +
+           "• Sleep debt has increased 22%<br>" +
+           "• Night shift physicians account for 80% of elevated risk<br>" +
+           "• Risk of turnover estimated at 2.4x baseline<br><br>" +
+           "<strong>Recommended Actions:</strong><br>" +
+           "✓ Review upcoming shift schedule<br>" +
+           "✓ Add recovery day after overnight blocks<br>" +
+           "✓ Conduct leadership listening session"
+      },
+      {
+        q: "What emerging problems have appeared this week?",
+        a: "<strong>New Workforce Trends Detected</strong><br><br>" +
+           "<strong>Anesthesia Department</strong><br>" +
+           "• Stress levels increased 12%<br>" +
+           "• HRV declined across 63% of staff<br>" +
+           "• EHR documentation burden increased 27%<br>" +
+           "• Pattern first emerged 9 days ago<br><br>" +
+           "<strong>Likely Root Cause:</strong> Recent staffing shortages have increased schedule compression.<br>" +
+           "<strong>Confidence:</strong> 86%<br><br>" +
+           "<strong>Recommended Intervention:</strong> Temporary schedule adjustments and supplemental coverage."
+      }
+    ]
   },
   {
-    q: "What's driving workforce stress this month?",
-    a: "Sleep Deficit is the top driver at 37%, followed by Overtime Burden at 24% and Night Shift Frequency at 18%. Together those three account for nearly 80% of reported stress this month."
+    id: "retention-risk",
+    title: "Retention Risk Prediction",
+    questions: [
+      {
+        q: "Who is most likely to leave in the next 6 months?",
+        a: "<strong>Retention Risk Forecast</strong><br><br>" +
+           "<strong>Current High-Risk Population:</strong> 14 clinicians<br>" +
+           "<strong>Projected Departure Risk:</strong> 22% within 6 months<br><br>" +
+           "<strong>Primary Drivers:</strong><br>" +
+           "• Consecutive night shifts<br>" +
+           "• Reduced PTO usage<br>" +
+           "• Rising emotional exhaustion<br>" +
+           "• Persistent after-hours documentation<br><br>" +
+           "<strong>Potential Financial Exposure:</strong> $2.3M replacement cost<br><br>" +
+           "<em>Individual names are withheld here — an authorized leader can drill down to employee-level access.</em>"
+      },
+      {
+        q: "What factors are driving retention risk?",
+        a: "<strong>Top Retention Drivers</strong><br><br>" +
+           "1. Schedule Instability — 31%<br>" +
+           "2. Documentation Burden — 24%<br>" +
+           "3. Sleep Deficiency — 18%<br>" +
+           "4. Staffing Shortages — 16%<br>" +
+           "5. Work-Life Conflict — 11%<br><br>" +
+           "<strong>Biggest Opportunity:</strong> Reducing last-minute schedule changes by 20% may decrease turnover risk by approximately 9%."
+      }
+    ]
   },
   {
-    q: "What's the estimated financial exposure?",
-    a: "Total estimated annual exposure is $3.2M: $1.8M from nurse turnover, $650K in overtime expense, $450K in resident/fellow attrition, and $300K from vacancy impact — up $420K from April."
+    id: "exec-summary",
+    title: "Executive Workforce Summary",
+    questions: [
+      {
+        q: "Give me a five-minute executive briefing.",
+        a: "<strong>Weekly Healthcare Workforce Briefing</strong><br><br>" +
+           "<strong>Overall Workforce Sustainability Score:</strong> 83/100<br><br>" +
+           "<strong>Positive Trends</strong><br>" +
+           "✓ Nurse engagement improved 6%<br>" +
+           "✓ Resident recovery scores improved 8%<br>" +
+           "✓ PTO utilization increased<br><br>" +
+           "<strong>Areas Requiring Attention</strong><br>" +
+           "⚠ Emergency Medicine burnout rising<br>" +
+           "⚠ ICU sleep quality declining<br>" +
+           "⚠ Overtime increased 14%<br><br>" +
+           "<strong>Predicted Next 30 Days</strong><br>" +
+           "• Stable nursing workforce<br>" +
+           "• Moderate physician workload concerns<br>" +
+           "• Elevated risk in critical care<br><br>" +
+           "<strong>Top Recommendation:</strong> Implement additional ICU coverage for weekends."
+      }
+    ]
+  },
+  {
+    id: "root-cause",
+    title: "Root Cause Analysis",
+    questions: [
+      {
+        q: "Why is ICU burnout increasing?",
+        a: "<strong>ICU Burnout Root Cause Analysis</strong><br><br>" +
+           "<strong>Primary Factors:</strong><br>" +
+           "Schedule Compression — 34%<br>" +
+           "Sleep Deficiency — 26%<br>" +
+           "Understaffing — 19%<br>" +
+           "Documentation Burden — 12%<br>" +
+           "Other Factors — 9%<br><br>" +
+           "<strong>Supporting Evidence</strong><br>" +
+           "• Consecutive shifts increased 22%<br>" +
+           "• Sleep duration decreased 48 minutes/night<br>" +
+           "• PTO utilization decreased 14%<br><br>" +
+           "<strong>Confidence:</strong> High"
+      }
+    ]
+  },
+  {
+    id: "financial-roi",
+    title: "Financial ROI Questions",
+    questions: [
+      {
+        q: "How much is burnout costing us?",
+        a: "<strong>Estimated Annual Burnout Cost</strong><br><br>" +
+           "Turnover Costs — $4.1M<br>" +
+           "Agency Staffing — $1.8M<br>" +
+           "Lost Productivity — $2.3M<br>" +
+           "Absenteeism — $0.6M<br><br>" +
+           "<strong>Total Estimated Impact:</strong> $8.8M annually<br>" +
+           "<strong>Equivalent:</strong> $24,110 per day"
+      },
+      {
+        q: "Which intervention delivered the highest ROI?",
+        a: "<strong>Well-being ROI Analysis</strong><br><br>" +
+           "<strong>1. Flexible Scheduling</strong><br>" +
+           "Investment: $145,000 · Savings: $970,000 · <strong>ROI: 569%</strong><br><br>" +
+           "<strong>2. Recovery Coaching</strong> — ROI: 321%<br><br>" +
+           "<strong>3. Wellness Workshops</strong> — ROI: 87%<br><br>" +
+           "<strong>Most Effective Driver:</strong> Improved schedule flexibility."
+      }
+    ]
+  },
+  {
+    id: "predictive-planning",
+    title: "Predictive Workforce Planning",
+    questions: [
+      {
+        q: "What problems should I expect next month?",
+        a: "<strong>30-Day Workforce Forecast</strong><br><br>" +
+           "<strong>High Probability Risks</strong><br>" +
+           "Emergency Medicine — Burnout Increase Expected: +11%<br>" +
+           "Critical Care — Turnover Risk Increase: +7%<br>" +
+           "Residents — Recovery Score Decline Expected: +9%<br><br>" +
+           "<strong>Drivers</strong><br>" +
+           "• Upcoming vacation shortages<br>" +
+           "• Increased patient census<br>" +
+           "• Holiday staffing constraints<br><br>" +
+           "Recommended preventive actions are available on request."
+      }
+    ]
+  },
+  {
+    id: "scenario-modeling",
+    title: "\"What If\" Scenario Modeling",
+    questions: [
+      {
+        q: "What happens if we hire two APPs for the emergency department?",
+        a: "<strong>Simulated Workforce Impact — Adding 2 APPs</strong><br><br>" +
+           "<strong>Expected Effects</strong><br>" +
+           "Physician Workload ↓ 11%<br>" +
+           "Burnout Risk ↓ 15%<br>" +
+           "After-Hours Documentation ↓ 21%<br>" +
+           "Retention Risk ↓ 9%<br><br>" +
+           "<strong>Estimated Annual Savings:</strong> $1.6M<br>" +
+           "<strong>Payback Period:</strong> 7 months<br>" +
+           "<strong>Confidence:</strong> 78%"
+      },
+      {
+        q: "What if we eliminate 24-hour call shifts?",
+        a: "<strong>Simulation Results — 24-Hour Call Elimination</strong><br><br>" +
+           "<strong>Predicted Outcomes</strong><br>" +
+           "Average Sleep +53 minutes<br>" +
+           "Recovery Scores +18%<br>" +
+           "Burnout Risk −22%<br>" +
+           "Turnover Risk −11%<br><br>" +
+           "Cost Increase: $640,000<br>" +
+           "Estimated Savings: $2.1M<br>" +
+           "<strong>Net Benefit: +$1.46M</strong>"
+      }
+    ]
+  },
+  {
+    id: "residency-intelligence",
+    title: "Residency Program Intelligence",
+    questions: [
+      {
+        q: "Which residency program is most at risk?",
+        a: "<strong>Residency Sustainability Rankings</strong><br><br>" +
+           "<strong>Highest Risk</strong><br>" +
+           "1. Emergency Medicine<br>" +
+           "2. General Surgery<br>" +
+           "3. Internal Medicine<br><br>" +
+           "<strong>Primary Driver:</strong> Sleep deprivation<br>" +
+           "<strong>Greatest Improvement Opportunity:</strong> Reduce consecutive overnight assignments."
+      },
+      {
+        q: "What should residency leadership do this month?",
+        a: "<strong>Top 3 Recommended Actions</strong><br><br>" +
+           "1. Increase post-call recovery time — Expected Burnout Reduction: 8%<br>" +
+           "2. Expand peer support participation — Expected Burnout Reduction: 4%<br>" +
+           "3. Reduce last-minute schedule changes — Expected Burnout Reduction: 11%<br><br>" +
+           "<strong>Combined Estimated Impact:</strong> 18–22% risk reduction."
+      }
+    ]
+  },
+  {
+    id: "board-level",
+    title: "Board-Level Queries",
+    questions: [
+      {
+        q: "Is our workforce healthier than last quarter?",
+        a: "<strong>Quarterly Workforce Health Review</strong><br><br>" +
+           "<strong>Overall Sustainability Score</strong><br>" +
+           "Q1: 74 &nbsp; Q2: 79 &nbsp; Q3: 84<br>" +
+           "<strong>Change: +13.5%</strong><br><br>" +
+           "<strong>Key Improvements</strong><br>" +
+           "✓ Better sleep recovery<br>" +
+           "✓ Reduced overtime<br>" +
+           "✓ Increased engagement<br><br>" +
+           "<strong>Remaining Risks</strong><br>" +
+           "• Emergency Medicine<br>" +
+           "• Critical Care"
+      }
+    ]
+  },
+  {
+    id: "visionary",
+    title: "The Visionary Query",
+    questions: [
+      {
+        q: "If I could only do one thing this quarter to improve workforce sustainability, what should it be?",
+        a: "<strong>Highest Impact Leadership Action</strong><br><br>" +
+           "<strong>Recommendation:</strong> Reduce schedule compression in Emergency Medicine.<br><br>" +
+           "<strong>Why</strong><br>" +
+           "• Largest burnout driver system-wide<br>" +
+           "• Affects 142 clinicians<br>" +
+           "• Highest turnover risk population<br><br>" +
+           "<strong>Estimated Outcomes</strong><br>" +
+           "Burnout Reduction: 18%<br>" +
+           "Turnover Reduction: 9%<br>" +
+           "Annual Savings: $2.8M<br>" +
+           "Implementation Difficulty: Moderate<br>" +
+           "Expected Time to Impact: 6–8 weeks"
+      }
+    ]
   }
 ];
 
 const chatFallbacks = [
   "Based on this month's data, Emergency Medicine Residents and ICU Nursing remain the two highest-risk areas, both flagged High on the heat map.",
   "The Workforce Sustainability Index is currently 78/100, up 4 points from April, while burnout risk over the next 90 days sits at 24%.",
-  "I can speak to workforce risk, stress drivers, staffing, financial exposure, and wellbeing trends from this month's report — try one of the suggestions above, or ask about a specific unit."
+  "I can speak to workforce risk, retention, ROI, and strategic planning — try one of the topics above, or ask about a specific department."
 ];
 
 let chatFallbackIndex = 0;
+let chwoExpanded = false;
+let chwoActiveCategory = null;
 
 function addChatMessage(text, sender) {
   const host = document.querySelector("#chatMessages");
@@ -1349,16 +1585,72 @@ function addChatMessage(text, sender) {
   host.scrollTop = host.scrollHeight;
 }
 
+function askChwoQuestion(question) {
+  addChatMessage(question.q, "user");
+  window.setTimeout(() => addChatMessage(question.a, "bot"), 320);
+  chwoActiveCategory = null;
+  renderChatSuggestions();
+}
+
 function renderChatSuggestions() {
   const host = document.querySelector("#chatSuggestions");
   if (!host) return;
-  host.innerHTML = chatSuggestions.map((item, i) => `<button type="button" class="chat-chip" data-chip="${i}">${item.q}</button>`).join("");
-  host.querySelectorAll(".chat-chip").forEach(button => {
-    button.addEventListener("click", () => {
-      const item = chatSuggestions[Number(button.dataset.chip)];
-      addChatMessage(item.q, "user");
-      window.setTimeout(() => addChatMessage(item.a, "bot"), 280);
-    });
+
+  if (chwoActiveCategory) {
+    const backChip = `<button type="button" class="chat-chip" data-back="1">← All Topics</button>`;
+    const questionChips = chwoActiveCategory.questions
+      .map((question, i) => `<button type="button" class="chat-chip" data-cat="${chwoActiveCategory.id}" data-q="${i}">${question.q}</button>`)
+      .join("");
+    host.innerHTML = backChip + questionChips;
+    return;
+  }
+
+  const visible = chwoExpanded ? chwoCategories : chwoCategories.slice(0, 3);
+  const categoryChips = visible
+    .map(cat => `<button type="button" class="chat-chip" data-cat="${cat.id}">${cat.title}</button>`)
+    .join("");
+  const toggleChip = chwoCategories.length > 3
+    ? `<button type="button" class="chat-chip" data-toggle-more="1">${chwoExpanded ? "Show fewer topics" : `+${chwoCategories.length - 3} more topics`}</button>`
+    : "";
+  host.innerHTML = categoryChips + toggleChip;
+}
+
+/* Single delegated listener on the (repeatedly re-rendered) suggestions
+   container, rather than re-binding per-button on every render. */
+function initChwoSuggestions() {
+  const host = document.querySelector("#chatSuggestions");
+  if (!host) return;
+
+  host.addEventListener("click", event => {
+    if (event.target.closest("[data-back]")) {
+      chwoActiveCategory = null;
+      renderChatSuggestions();
+      return;
+    }
+
+    if (event.target.closest("[data-toggle-more]")) {
+      chwoExpanded = !chwoExpanded;
+      renderChatSuggestions();
+      return;
+    }
+
+    const questionBtn = event.target.closest("[data-q]");
+    if (questionBtn) {
+      const category = chwoCategories.find(cat => cat.id === questionBtn.dataset.cat);
+      askChwoQuestion(category.questions[Number(questionBtn.dataset.q)]);
+      return;
+    }
+
+    const categoryBtn = event.target.closest("[data-cat]");
+    if (categoryBtn) {
+      const category = chwoCategories.find(cat => cat.id === categoryBtn.dataset.cat);
+      if (category.questions.length === 1) {
+        askChwoQuestion(category.questions[0]);
+      } else {
+        chwoActiveCategory = category;
+        renderChatSuggestions();
+      }
+    }
   });
 }
 
@@ -1370,7 +1662,8 @@ function initChatbot() {
   const closeBtn = document.querySelector("#chatPanelClose");
   if (!input || !send || !fab || !panel) return;
 
-  addChatMessage("Hi, I'm your Workforce Assistant. Ask me about this month's data, or tap a suggestion below.", "bot");
+  addChatMessage("Hi, I'm your AI Chief Wellness Officer. Choose a topic below, or ask me anything about workforce risk, retention, or ROI.", "bot");
+  initChwoSuggestions();
   renderChatSuggestions();
 
   function handleSend() {

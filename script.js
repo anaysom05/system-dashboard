@@ -1621,7 +1621,14 @@ function initChwoSuggestions() {
   const host = document.querySelector("#chatSuggestions");
   if (!host) return;
 
+  /* This handler re-renders the chip list (see renderChatSuggestions calls
+     below), which detaches the clicked button from the DOM mid-bubble.
+     These clicks never need to reach `document`, so stop them here as a
+     second guard against the outside-click-to-close listener misfiring
+     (belt-and-suspenders alongside the composedPath() fix there). */
   host.addEventListener("click", event => {
+    event.stopPropagation();
+
     if (event.target.closest("[data-back]")) {
       chwoActiveCategory = null;
       renderChatSuggestions();
@@ -1696,9 +1703,18 @@ function initChatbot() {
   fab.addEventListener("click", () => setOpen(!panel.classList.contains("open")));
   if (closeBtn) closeBtn.addEventListener("click", () => setOpen(false));
 
+  /* Clicking a topic chip re-renders #chatSuggestions (its innerHTML gets
+     replaced to show sub-questions, or the answer). If that happens while
+     the click event is still bubbling, the clicked button — now detached
+     from the DOM — makes `panel.contains(event.target)` below return false,
+     which wrongly reads as "clicked outside the panel" and closes it.
+     composedPath() captures the propagation path at dispatch time, before
+     any of that mutation, so it stays accurate even once the target is
+     removed. */
   document.addEventListener("click", event => {
     if (!panel.classList.contains("open")) return;
-    if (panel.contains(event.target) || fab.contains(event.target)) return;
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    if (path.includes(panel) || path.includes(fab)) return;
     setOpen(false);
   });
 

@@ -1580,14 +1580,32 @@ let chwoActiveCategory = null;
 
 function addChatMessage(text, sender) {
   const host = document.querySelector("#chatMessages");
-  if (!host) return;
-  host.appendChild(el("div", `chat-msg ${sender}`, text));
+  if (!host) return null;
+  const node = el("div", `chat-msg ${sender}`, text);
+  host.appendChild(node);
   host.scrollTop = host.scrollHeight;
+  return node;
+}
+
+/* Shows a transient "The Officer is thinking…" bubble, then swaps it for the
+   real answer after a couple of seconds — so pre-written answers don't feel
+   instant/canned. Delay is randomized a bit (1.6–2.4s) so repeated questions
+   don't all resolve on an identical, obviously-fake timer. */
+function respondAfterThinking(answerHTML) {
+  const thinkingNode = addChatMessage(
+    `<span class="chat-thinking">The Officer is thinking<span class="chat-dots"><span>.</span><span>.</span><span>.</span></span></span>`,
+    "bot"
+  );
+  const delay = 1600 + Math.random() * 800;
+  window.setTimeout(() => {
+    if (thinkingNode) thinkingNode.remove();
+    addChatMessage(answerHTML, "bot");
+  }, delay);
 }
 
 function askChwoQuestion(question) {
   addChatMessage(question.q, "user");
-  window.setTimeout(() => addChatMessage(question.a, "bot"), 320);
+  respondAfterThinking(question.a);
   chwoActiveCategory = null;
   renderChatSuggestions();
 }
@@ -1680,7 +1698,7 @@ function initChatbot() {
     input.value = "";
     const reply = chatFallbacks[chatFallbackIndex % chatFallbacks.length];
     chatFallbackIndex += 1;
-    window.setTimeout(() => addChatMessage(reply, "bot"), 280);
+    respondAfterThinking(reply);
   }
 
   send.addEventListener("click", handleSend);

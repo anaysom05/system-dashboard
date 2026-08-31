@@ -24,6 +24,7 @@
         <button class="nav-item" type="button" data-view="v-patient"><i data-icon="bed"></i>Patient Impact</button>
         <button class="nav-item" type="button" data-view="v-finance"><i data-icon="circle-dollar-sign"></i>Financial Impact</button>
         <button class="nav-item" type="button" data-view="v-interventions"><i data-icon="clipboard-check"></i>Interventions</button>
+        <button class="nav-item" type="button" data-view="v-scheduling"><i data-icon="calendar"></i>Scheduling</button>
       </nav>
 
       <section class="source">
@@ -256,6 +257,39 @@
       </div>
 
       <div id="view-host"></div>
+
+      <div class="view" id="v-scheduling">
+        <section class="page-grid cols-1">
+          <article class="card sched-card">
+            <div class="head">
+              <div>
+                <h2>Weekly Resident Schedules</h2>
+                <p>Current Rotation — 15 Residents</p>
+              </div>
+            </div>
+            <div id="schedCurrent"></div>
+          </article>
+
+          <article class="card sched-card">
+            <div class="head">
+              <div>
+                <h2>AI Schedule Optimization</h2>
+                <p>Choose a retention goal — the Wellness Officer will generate an optimized schedule below</p>
+              </div>
+            </div>
+            <div class="sched-options">
+              <button type="button" class="sched-option-btn" data-sched-action="top">I want to retain my top 3 best residents</button>
+              <button type="button" class="sched-option-btn" data-sched-action="burnt">I want to retain my most burnt-out residents</button>
+              <button type="button" class="sched-option-btn" data-sched-action="balance">I want to balance workload evenly across all residents</button>
+            </div>
+            <div class="sched-working" id="schedWorking">
+              <span class="chat-dots"><span>.</span><span>.</span><span>.</span></span>&nbsp;Wellness Officer is working
+            </div>
+          </article>
+
+          <div id="schedResults"></div>
+        </section>
+      </div>
 
       <footer>
         <span>pp = percentage points</span>

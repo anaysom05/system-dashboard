@@ -1742,3 +1742,172 @@ function initChatbot() {
 }
 
 initChatbot();
+
+/* =========================================================================
+   Scheduling tab
+   -------------------------------------------------------------------------
+   15 hardcoded residents, each with a Mon–Sun shift pattern (Off/Day/Night/
+   24h Call) and a computed weekly-hours total. Three of them are tagged
+   "top" performers and three "burnt" (most burnt-out) — each of those six
+   also carries a hand-authored `optimized` schedule that's visibly lighter
+   than their current one. The three action buttons below the roster each
+   generate a new result card: the two named ones pull their tagged subset's
+   optimized schedule, and the third (balance) applies one uniform, moderate
+   pattern across all 15 residents. Every action shows a 2-second "Wellness
+   Officer is working" state first, to read as an agentic action rather than
+   an instant lookup.
+   ========================================================================= */
+
+const shiftHours = { Off: 0, Day: 12, Night: 12, Call: 24 };
+const shiftClass = { Off: "sched-off", Day: "sched-day", Night: "sched-night", Call: "sched-call" };
+const shiftLabel = { Off: "Off", Day: "Day Shift", Night: "Night Shift", Call: "24h Call" };
+const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const balancedSchedule = ["Day", "Off", "Day", "Off", "Night", "Off", "Off"];
+
+const residents = [
+  {
+    name: "Dr. A. Whitfield", program: "Family Medicine", tier: "top",
+    schedule: ["Day", "Off", "Day", "Off", "Day", "Off", "Off"],
+    optimized: ["Day", "Off", "Off", "Day", "Off", "Off", "Off"]
+  },
+  {
+    name: "Dr. R. Mensah", program: "Pediatrics", tier: "top",
+    schedule: ["Day", "Off", "Night", "Off", "Day", "Off", "Off"],
+    optimized: ["Day", "Off", "Off", "Off", "Day", "Off", "Off"]
+  },
+  {
+    name: "Dr. K. Nakamura", program: "Psychiatry", tier: "top",
+    schedule: ["Day", "Off", "Day", "Off", "Off", "Day", "Off"],
+    optimized: ["Day", "Off", "Off", "Off", "Off", "Day", "Off"]
+  },
+  {
+    name: "Dr. J. Okafor", program: "Emergency Medicine", tier: "burnt",
+    schedule: ["Night", "Night", "Call", "Off", "Night", "Night", "Off"],
+    optimized: ["Day", "Off", "Day", "Off", "Off", "Day", "Off"]
+  },
+  {
+    name: "Dr. L. Petrova", program: "Surgery", tier: "burnt",
+    schedule: ["Call", "Off", "Night", "Night", "Off", "Call", "Off"],
+    optimized: ["Day", "Off", "Day", "Off", "Day", "Off", "Off"]
+  },
+  {
+    name: "Dr. T. Alvarez", program: "Internal Medicine", tier: "burnt",
+    schedule: ["Night", "Call", "Off", "Night", "Call", "Off", "Night"],
+    optimized: ["Day", "Off", "Day", "Off", "Off", "Day", "Off"]
+  },
+  { name: "Dr. M. Reyes", program: "Anesthesiology", tier: "standard", schedule: ["Day", "Night", "Off", "Day", "Off", "Night", "Off"] },
+  { name: "Dr. E. Larsen", program: "OB/GYN", tier: "standard", schedule: ["Day", "Off", "Night", "Day", "Off", "Off", "Night"] },
+  { name: "Dr. N. Osei", program: "Radiology", tier: "standard", schedule: ["Day", "Day", "Off", "Night", "Off", "Day", "Off"] },
+  { name: "Dr. B. Kowalski", program: "Emergency Medicine", tier: "standard", schedule: ["Night", "Off", "Day", "Night", "Off", "Day", "Off"] },
+  { name: "Dr. H. Suzuki", program: "Surgery", tier: "standard", schedule: ["Day", "Night", "Off", "Day", "Night", "Off", "Off"] },
+  { name: "Dr. F. Dubois", program: "Internal Medicine", tier: "standard", schedule: ["Day", "Off", "Day", "Night", "Off", "Day", "Off"] },
+  { name: "Dr. C. Adeyemi", program: "Family Medicine", tier: "standard", schedule: ["Day", "Off", "Day", "Off", "Day", "Off", "Day"] },
+  { name: "Dr. P. Ibrahim", program: "Pediatrics", tier: "standard", schedule: ["Day", "Day", "Off", "Off", "Night", "Off", "Day"] },
+  { name: "Dr. V. Romano", program: "Psychiatry", tier: "standard", schedule: ["Day", "Off", "Night", "Off", "Day", "Off", "Day"] }
+];
+
+const schedActions = {
+  top: {
+    title: "Optimized Schedule — Retaining Top 3 Residents",
+    subtitle: "Lighter rotations for your highest-performing residents, to keep them engaged and reduce flight risk.",
+    residents: () => residents.filter(r => r.tier === "top").map(r => ({ name: r.name, program: r.program, schedule: r.optimized }))
+  },
+  burnt: {
+    title: "Optimized Schedule — Supporting Most Burnt-Out Residents",
+    subtitle: "Reduced night/call load for the residents showing the highest burnout signals, to protect retention.",
+    residents: () => residents.filter(r => r.tier === "burnt").map(r => ({ name: r.name, program: r.program, schedule: r.optimized }))
+  },
+  balance: {
+    title: "Optimized Schedule — Balanced Workload (All 15 Residents)",
+    subtitle: "One evenly distributed rotation applied across the full roster, so no resident is carrying a disproportionate share.",
+    residents: () => residents.map(r => ({ name: r.name, program: r.program, schedule: balancedSchedule }))
+  }
+};
+
+function scheduleLegendHTML() {
+  return `
+    <div class="sched-legend">
+      <span><span class="day-cell sched-off"></span>Off</span>
+      <span><span class="day-cell sched-day"></span>Day</span>
+      <span><span class="day-cell sched-night"></span>Night</span>
+      <span><span class="day-cell sched-call"></span>24h Call</span>
+    </div>`;
+}
+
+function scheduleHeaderHTML() {
+  return `<div class="sched-days-head"><span></span>${weekDays.map(d => `<span>${d}</span>`).join("")}<span></span></div>`;
+}
+
+function scheduleRowHTML(name, program, schedule) {
+  const hours = schedule.reduce((sum, s) => sum + shiftHours[s], 0);
+  const cells = schedule.map((s, i) => `<span class="day-cell ${shiftClass[s]}" title="${weekDays[i]}: ${shiftLabel[s]}"></span>`).join("");
+  return `
+    <div class="sched-row">
+      <div class="sched-info">
+        <span class="sched-name">${name}</span>
+        <span class="sched-program">${program}</span>
+      </div>
+      ${cells}
+      <strong class="sched-hours">${hours}h</strong>
+    </div>`;
+}
+
+function scheduleTableHTML(rows) {
+  return scheduleHeaderHTML() + rows.map(r => scheduleRowHTML(r.name, r.program, r.schedule)).join("");
+}
+
+function renderCurrentSchedules() {
+  const legendHost = document.querySelector("#schedCurrent");
+  if (!legendHost) return;
+  legendHost.innerHTML = scheduleLegendHTML() + scheduleTableHTML(residents.map(r => ({ name: r.name, program: r.program, schedule: r.schedule })));
+}
+
+function initScheduling() {
+  renderCurrentSchedules();
+
+  const optionsHost = document.querySelector(".sched-options");
+  const working = document.querySelector("#schedWorking");
+  const resultsHost = document.querySelector("#schedResults");
+  if (!optionsHost || !working || !resultsHost) return;
+
+  let busy = false;
+
+  optionsHost.addEventListener("click", event => {
+    const btn = event.target.closest("[data-sched-action]");
+    if (!btn || busy) return;
+    const action = schedActions[btn.dataset.schedAction];
+    if (!action) return;
+
+    busy = true;
+    optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = true; });
+    working.classList.add("visible");
+
+    window.setTimeout(() => {
+      working.classList.remove("visible");
+
+      try {
+        const card = el("article", "card sched-card sched-result", `
+          <div class="head">
+            <div>
+              <h2>${action.title}</h2>
+              <p>${action.subtitle}</p>
+            </div>
+          </div>
+          ${scheduleLegendHTML()}
+          ${scheduleTableHTML(action.residents())}
+        `);
+        resultsHost.appendChild(card);
+        if (typeof card.scrollIntoView === "function") card.scrollIntoView({ behavior: "smooth", block: "start" });
+      } finally {
+        /* Always re-enable, even if building/inserting the card above threw
+           for some unforeseen reason — the alternative is a permanently
+           disabled action row with no way to recover without a reload. */
+        optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = false; });
+        busy = false;
+      }
+    }, 2000);
+  });
+}
+
+initScheduling();

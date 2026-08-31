@@ -1813,3 +1813,201 @@ footer {
     padding-top: 12px;
   }
 }
+
+/* ---- Scheduling tab -------------------------------------------------------
+   Weekly per-resident shift grids plus the AI optimization action buttons.
+   Visibility for the "working" indicator and each result card is toggled
+   via a .visible class rather than the [hidden] attribute — .card and
+   .sched-working both set `display` unconditionally, and any author-level
+   display rule silently wins over the browser's default [hidden] { display:
+   none }, so mixing the two (as happened with the Filters badge earlier)
+   would leave them impossible to actually hide. */
+
+.sched-card {
+  min-height: auto;
+}
+
+.sched-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.sched-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.day-cell {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  margin: 0 auto;
+}
+
+.sched-off {
+  background: #eef1f6;
+}
+
+.sched-day {
+  background: var(--teal);
+}
+
+.sched-night {
+  background: var(--violet);
+}
+
+.sched-call {
+  background: var(--red);
+}
+
+.sched-days-head,
+.sched-row {
+  display: grid;
+  grid-template-columns: 172px repeat(7, 26px) 42px;
+  align-items: center;
+  gap: 6px;
+}
+
+.sched-days-head {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 8.5px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.sched-days-head span:first-child,
+.sched-days-head span:last-child {
+  text-align: left;
+}
+
+.sched-row {
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f3f8;
+}
+
+.sched-row:last-child {
+  border-bottom: 0;
+}
+
+.sched-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sched-name {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sched-program {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sched-hours {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.sched-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.sched-option-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.sched-option-btn::after {
+  content: "→";
+  margin-left: 10px;
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.sched-option-btn:hover:not(:disabled) {
+  border-color: var(--blue);
+  background: #eef4fc;
+  color: var(--blue);
+}
+
+.sched-option-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.sched-working {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: #f7f9fc;
+  color: var(--muted);
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.sched-working.visible {
+  display: flex;
+}
+
+#schedResults {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sched-result .head p {
+  max-width: 560px;
+}
+
+@media (max-width: 760px) {
+  .sched-days-head,
+  .sched-row {
+    grid-template-columns: 120px repeat(7, 20px) 34px;
+    gap: 3px;
+  }
+
+  .day-cell {
+    width: 16px;
+    height: 16px;
+  }
+}

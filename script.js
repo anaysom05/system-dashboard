@@ -1149,6 +1149,10 @@ function setActiveView(id) {
 }
 
 function switchView(id) {
+  /* Belt-and-suspenders alongside hiding the nav button itself in
+     applyRolePermissions() — even if this view were reached some other
+     way, a CEO session never actually shows Scheduling. */
+  if (id === "v-scheduling" && currentRole === "ceo") return;
   const target = id && document.getElementById(id);
   if (!target) return;
   setActiveView(id);
@@ -1911,3 +1915,131 @@ function initScheduling() {
 }
 
 initScheduling();
+
+/* =========================================================================
+   Login / role gating
+   -------------------------------------------------------------------------
+   Two demo accounts, matched by email only — any non-empty password is
+   accepted. The signed-in role is kept in `currentRole` (checked by the
+   switchView() guard above) and mirrored to sessionStorage so a refresh
+   mid-demo doesn't force signing in again. CEO hides the Scheduling tab
+   entirely; Director sees the full app.
+   ========================================================================= */
+
+const validAccounts = {
+  "ceo@lifespan.com": "ceo",
+  "director@lifespan.com": "director"
+};
+
+const ROLE_STORAGE_KEY = "empowerSessionRole";
+
+let currentRole = null;
+
+function getStoredRole() {
+  try {
+    return window.sessionStorage.getItem(ROLE_STORAGE_KEY);
+  } catch (err) {
+    return null;
+  }
+}
+
+function storeRole(role) {
+  try {
+    window.sessionStorage.setItem(ROLE_STORAGE_KEY, role);
+  } catch (err) {
+    /* sessionStorage unavailable (e.g. private browsing) — session just
+       won't survive a refresh; login itself still works fine. */
+  }
+}
+
+function clearStoredRole() {
+  try {
+    window.sessionStorage.removeItem(ROLE_STORAGE_KEY);
+  } catch (err) {
+    /* ignore */
+  }
+}
+
+/* Shows/hides the Scheduling nav item for the signed-in role, and bounces
+   off that view first if a CEO session is somehow already sitting on it. */
+function applyRolePermissions(role) {
+  const schedNav = document.querySelector('.nav-item[data-view="v-scheduling"]');
+  const isCeo = role === "ceo";
+  if (schedNav) schedNav.style.display = isCeo ? "none" : "";
+
+  const schedView = document.querySelector("#v-scheduling");
+  if (isCeo && schedView && schedView.classList.contains("active")) {
+    switchView("v-overview");
+  }
+}
+
+function initLogin() {
+  const loginScreen = document.querySelector("#loginScreen");
+  const appRoot = document.querySelector("#appRoot");
+  const form = document.querySelector("#loginForm");
+  const emailInput = document.querySelector("#loginEmail");
+  const passwordInput = document.querySelector("#loginPassword");
+  const errorEl = document.querySelector("#loginError");
+  const userMenuLabel = document.querySelector("#userMenuLabel");
+  const userMenuBtn = document.querySelector("#userMenuBtn");
+  const userMenu = document.querySelector("#userMenu");
+  const logoutBtn = document.querySelector("#logoutBtn");
+  if (!loginScreen || !appRoot || !form) return;
+
+  function showApp(role) {
+    currentRole = role;
+    loginScreen.classList.add("dismissed");
+    appRoot.classList.add("visible");
+    applyRolePermissions(role);
+    if (userMenuLabel) userMenuLabel.textContent = role === "ceo" ? "CEO — Lifespan" : "Director — Lifespan";
+  }
+
+  function logOut() {
+    currentRole = null;
+    clearStoredRole();
+    form.reset();
+    if (errorEl) errorEl.classList.remove("visible");
+    appRoot.classList.remove("visible");
+    loginScreen.classList.remove("dismissed");
+    closeAllMenus();
+    if (emailInput) window.setTimeout(() => emailInput.focus(), 50);
+  }
+
+  const storedRole = getStoredRole();
+  if (storedRole === "ceo" || storedRole === "director") showApp(storedRole);
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const email = (emailInput.value || "").trim().toLowerCase();
+    const password = passwordInput.value || "";
+    const role = validAccounts[email];
+
+    if (!role || !password) {
+      if (errorEl) {
+        errorEl.textContent = !role
+          ? "That email isn't recognized. Use one of the demo accounts below."
+          : "Enter a password (any value) to continue.";
+        errorEl.classList.add("visible");
+      }
+      return;
+    }
+
+    if (errorEl) errorEl.classList.remove("visible");
+    storeRole(role);
+    showApp(role);
+  });
+
+  if (logoutBtn) logoutBtn.addEventListener("click", logOut);
+
+  if (userMenuBtn && userMenu) {
+    userMenuBtn.addEventListener("click", event => {
+      event.stopPropagation();
+      const willOpen = !userMenu.classList.contains("open");
+      closeAllMenus();
+      userMenu.classList.toggle("open", willOpen);
+      userMenuBtn.setAttribute("aria-expanded", String(willOpen));
+    });
+  }
+}
+
+initLogin();

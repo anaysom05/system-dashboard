@@ -8,6 +8,31 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="login-screen" id="loginScreen">
+      <div class="login-card">
+        <div class="login-brand">
+          <div class="mark">emPower<i data-icon="empower-mark" data-icon-class="solid brand-mark"></i></div>
+          <p>Workforce Sustainability Dashboard</p>
+        </div>
+        <h1>Sign in</h1>
+        <p class="login-sub">Enter your emPower+ credentials to continue.</p>
+        <form id="loginForm" novalidate>
+          <label class="login-field">
+            <span>Email</span>
+            <input type="text" id="loginEmail" autocomplete="username" placeholder="you@lifespan.com" />
+          </label>
+          <label class="login-field">
+            <span>Password</span>
+            <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" />
+          </label>
+          <p class="login-error" id="loginError"></p>
+          <button type="submit" class="login-submit">Log In</button>
+        </form>
+        <p class="login-hint">Demo accounts — any password works:<br /><strong>ceo@lifespan.com</strong> &middot; <strong>director@lifespan.com</strong></p>
+      </div>
+    </div>
+
+    <div class="app-root" id="appRoot">
     <aside class="side">
       <div class="brand">
         <div class="mark">emPower<i data-icon="empower-mark" data-icon-class="solid brand-mark"></i></div>
@@ -62,6 +87,14 @@
               <i data-icon="list-filter"></i> Filters<span class="pill-badge" id="filterBadge">1</span>
             </button>
             <div class="dropdown-menu" id="filterMenu" role="menu" aria-label="Filters"></div>
+          </div>
+          <div class="pill-wrap">
+            <button class="pill" type="button" id="userMenuBtn" aria-haspopup="true" aria-expanded="false">
+              <i data-icon="user-round" data-icon-class="sm"></i> <span id="userMenuLabel">Signed in</span> <i data-icon="chevron-down" data-icon-class="sm"></i>
+            </button>
+            <div class="dropdown-menu" id="userMenu" role="menu" aria-label="Account">
+              <button type="button" class="dropdown-item" id="logoutBtn"><span>Log Out</span></button>
+            </div>
           </div>
           <button class="help" type="button" aria-label="Help"><i data-icon="circle-help"></i></button>
         </div>
@@ -324,6 +357,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
         </button>
       </div>
+    </div>
     </div>
 
     <script src="assets/icons.js"></script>

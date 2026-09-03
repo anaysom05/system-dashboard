@@ -1150,9 +1150,15 @@ function setActiveView(id) {
 
 function switchView(id) {
   /* Belt-and-suspenders alongside hiding the nav button itself in
-     applyRolePermissions() — even if this view were reached some other
-     way, a CEO session never actually shows Scheduling. */
-  if (id === "v-scheduling" && currentRole === "ceo") return;
+     applyRolePermissions() — even if one of these views were reached some
+     other way, a session without the matching role never actually shows it.
+     roleRestrictedViews is declared further down (with the rest of the
+     login/role logic), but that's fine: switchView() is only ever invoked
+     from event handlers or from initLogin() itself, both of which run only
+     after the whole script — including that later declaration — has
+     already finished evaluating top to bottom. */
+  const restrictedRole = roleRestrictedViews[id];
+  if (restrictedRole && currentRole !== restrictedRole) return;
   const target = id && document.getElementById(id);
   if (!target) return;
   setActiveView(id);
@@ -1870,7 +1876,7 @@ function renderCurrentSchedules() {
 function initScheduling() {
   renderCurrentSchedules();
 
-  const optionsHost = document.querySelector(".sched-options");
+  const optionsHost = document.querySelector("#schedOptions");
   const working = document.querySelector("#schedWorking");
   const resultsHost = document.querySelector("#schedResults");
   if (!optionsHost || !working || !resultsHost) return;
@@ -1917,6 +1923,143 @@ function initScheduling() {
 initScheduling();
 
 /* =========================================================================
+   ROI Comparison tab (CEO)
+   -------------------------------------------------------------------------
+   Static figures straight from the intervention ROI analysis: only
+   Flexible Scheduling has a disclosed investment/savings breakdown, so the
+   other two show a dash in those columns rather than an invented number.
+   ========================================================================= */
+
+const roiInterventions = [
+  { name: "Flexible Scheduling", investment: 145000, savings: 970000, roi: 569, color: "var(--green)" },
+  { name: "Recovery Coaching", investment: null, savings: null, roi: 321, color: "var(--teal)" },
+  { name: "Wellness Workshops", investment: null, savings: null, roi: 87, color: "var(--violet)" }
+];
+
+function formatCurrencyOrDash(n) {
+  return n == null ? "—" : formatCurrency(n);
+}
+
+function renderRoiComparison() {
+  const barsHost = document.querySelector("#roiBars");
+  const tableHost = document.querySelector("#roiTable");
+  const noteHost = document.querySelector("#roiNote");
+  if (!barsHost || !tableHost) return;
+
+  const maxRoi = Math.max(...roiInterventions.map(item => item.roi));
+  barsHost.innerHTML = barListHTML(
+    roiInterventions.map(item => [item.name, item.roi, item.color]),
+    maxRoi,
+    "%"
+  );
+
+  tableHost.innerHTML =
+    `<thead><tr><th>Intervention</th><th>Investment</th><th>Est. Savings</th><th>ROI</th></tr></thead><tbody>` +
+    roiInterventions.map(item => `
+      <tr>
+        <td>${item.name}</td>
+        <td>${formatCurrencyOrDash(item.investment)}</td>
+        <td>${formatCurrencyOrDash(item.savings)}</td>
+        <td class="good">${item.roi}%</td>
+      </tr>`).join("") +
+    `</tbody>`;
+
+  if (noteHost) noteHost.textContent = "Most Effective Driver: Improved schedule flexibility.";
+}
+
+renderRoiComparison();
+
+/* =========================================================================
+   Scenario Simulator tab (Director)
+   -------------------------------------------------------------------------
+   Same agentic pattern as Scheduling: pick a scenario, see a "Modeling
+   scenario…" state for ~2s, then a result card appends below (stacking,
+   not replacing, if more than one scenario is run).
+   ========================================================================= */
+
+const scenarioActions = {
+  apps: {
+    title: "Simulated Impact — Hire 2 APPs for the Emergency Department",
+    subtitle: "Modeled effect of adding two advanced practice providers to ED staffing.",
+    rows: [
+      ["Physician Workload", "↓ 11%"],
+      ["Burnout Risk", "↓ 15%"],
+      ["After-Hours Documentation", "↓ 21%"],
+      ["Retention Risk", "↓ 9%"]
+    ],
+    summary: [
+      ["Estimated Annual Savings", "$1.6M"],
+      ["Payback Period", "7 months"],
+      ["Confidence", "78%"]
+    ]
+  },
+  call: {
+    title: "Simulated Impact — Eliminate 24-Hour Call Shifts",
+    subtitle: "Modeled effect of removing 24-hour call shifts from the rotation.",
+    rows: [
+      ["Average Sleep", "+53 min"],
+      ["Recovery Scores", "+18%"],
+      ["Burnout Risk", "−22%"],
+      ["Turnover Risk", "−11%"]
+    ],
+    summary: [
+      ["Cost Increase", "$640,000"],
+      ["Estimated Savings", "$2.1M"],
+      ["Net Benefit", "+$1.46M"]
+    ]
+  }
+};
+
+function scenarioResultHTML(action) {
+  const rowsHTML = action.rows.map(([label, value]) => `<tr><td>${label}</td><td class="up">${value}</td></tr>`).join("");
+  const summaryHTML = action.summary.map(([label, value]) => `<span>${label}: <strong>${value}</strong></span>`).join("");
+  return `
+    <div class="head">
+      <div>
+        <h2>${action.title}</h2>
+        <p>${action.subtitle}</p>
+      </div>
+    </div>
+    <table><thead><tr><th>Metric</th><th>Projected Change</th></tr></thead><tbody>${rowsHTML}</tbody></table>
+    <div class="scenario-summary">${summaryHTML}</div>`;
+}
+
+function initScenarioSimulator() {
+  const optionsHost = document.querySelector("#scenarioOptions");
+  const working = document.querySelector("#scenarioWorking");
+  const resultsHost = document.querySelector("#scenarioResults");
+  if (!optionsHost || !working || !resultsHost) return;
+
+  let busy = false;
+
+  optionsHost.addEventListener("click", event => {
+    const btn = event.target.closest("[data-scenario-action]");
+    if (!btn || busy) return;
+    const action = scenarioActions[btn.dataset.scenarioAction];
+    if (!action) return;
+
+    busy = true;
+    optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = true; });
+    working.classList.add("visible");
+
+    window.setTimeout(() => {
+      working.classList.remove("visible");
+
+      try {
+        const card = el("article", "card sched-card sched-result", scenarioResultHTML(action));
+        resultsHost.appendChild(card);
+        if (typeof card.scrollIntoView === "function") card.scrollIntoView({ behavior: "smooth", block: "start" });
+      } finally {
+        optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = false; });
+        busy = false;
+      }
+    }, 2000);
+  });
+}
+
+initScenarioSimulator();
+
+/* =========================================================================
    Login / role gating
    -------------------------------------------------------------------------
    Two demo accounts, matched by email only — any non-empty password is
@@ -1960,17 +2103,30 @@ function clearStoredRole() {
   }
 }
 
-/* Shows/hides the Scheduling nav item for the signed-in role, and bounces
-   off that view first if a CEO session is somehow already sitting on it. */
-function applyRolePermissions(role) {
-  const schedNav = document.querySelector('.nav-item[data-view="v-scheduling"]');
-  const isCeo = role === "ceo";
-  if (schedNav) schedNav.style.display = isCeo ? "none" : "";
+/* Which view requires which role. Scheduling and the Scenario Simulator are
+   Director-only; ROI Comparison is CEO-only. Referenced both here (to show/
+   hide each nav item and bounce off a now-restricted view) and in
+   switchView() (to block reaching a restricted view any other way). */
+const roleRestrictedViews = {
+  "v-scheduling": "director",
+  "v-scenario": "director",
+  "v-roi": "ceo"
+};
 
-  const schedView = document.querySelector("#v-scheduling");
-  if (isCeo && schedView && schedView.classList.contains("active")) {
-    switchView("v-overview");
-  }
+/* Shows/hides each role-restricted nav item for the signed-in role, and
+   bounces to the Overview first if the session is already sitting on a view
+   that role can no longer see (e.g. after switching accounts via Log Out). */
+function applyRolePermissions(role) {
+  Object.entries(roleRestrictedViews).forEach(([viewId, allowedRole]) => {
+    const nav = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+    const allowed = role === allowedRole;
+    if (nav) nav.style.display = allowed ? "" : "none";
+
+    const view = document.getElementById(viewId);
+    if (!allowed && view && view.classList.contains("active")) {
+      switchView("v-overview");
+    }
+  });
 }
 
 function initLogin() {

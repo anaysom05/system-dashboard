@@ -50,6 +50,8 @@
         <button class="nav-item" type="button" data-view="v-finance"><i data-icon="circle-dollar-sign"></i>Financial Impact</button>
         <button class="nav-item" type="button" data-view="v-interventions"><i data-icon="clipboard-check"></i>Interventions</button>
         <button class="nav-item" type="button" data-view="v-scheduling"><i data-icon="calendar"></i>Scheduling</button>
+        <button class="nav-item" type="button" data-view="v-roi"><i data-icon="circle-dollar-sign"></i>ROI Comparison</button>
+        <button class="nav-item" type="button" data-view="v-scenario"><i data-icon="chart-column"></i>Scenario Simulator</button>
       </nav>
 
       <section class="source">
@@ -310,7 +312,7 @@
                 <p>Choose a retention goal — the Wellness Officer will generate an optimized schedule below</p>
               </div>
             </div>
-            <div class="sched-options">
+            <div class="sched-options" id="schedOptions">
               <button type="button" class="sched-option-btn" data-sched-action="top">I want to retain my top 3 best residents</button>
               <button type="button" class="sched-option-btn" data-sched-action="burnt">I want to retain my most burnt-out residents</button>
               <button type="button" class="sched-option-btn" data-sched-action="balance">I want to balance workload evenly across all residents</button>
@@ -321,6 +323,53 @@
           </article>
 
           <div id="schedResults"></div>
+        </section>
+      </div>
+
+      <div class="view" id="v-roi">
+        <section class="page-grid cols-2">
+          <article class="card">
+            <div class="head">
+              <div>
+                <h2>Intervention ROI Comparison</h2>
+                <p>Estimated Return on Investment</p>
+              </div>
+            </div>
+            <div class="bars" id="roiBars"></div>
+          </article>
+
+          <article class="card">
+            <div class="head">
+              <div>
+                <h2>Investment &amp; Savings Detail</h2>
+                <p>Where figures are available</p>
+              </div>
+            </div>
+            <table id="roiTable"></table>
+            <p class="roi-note" id="roiNote"></p>
+          </article>
+        </section>
+      </div>
+
+      <div class="view" id="v-scenario">
+        <section class="page-grid cols-1">
+          <article class="card sched-card">
+            <div class="head">
+              <div>
+                <h2>"What If" Scenario Simulator</h2>
+                <p>Model a staffing or policy change before committing to it</p>
+              </div>
+            </div>
+            <div class="sched-options" id="scenarioOptions">
+              <button type="button" class="sched-option-btn" data-scenario-action="apps">What if we hire 2 APPs for the Emergency Department?</button>
+              <button type="button" class="sched-option-btn" data-scenario-action="call">What if we eliminate 24-hour call shifts?</button>
+            </div>
+            <div class="sched-working" id="scenarioWorking">
+              <span class="chat-dots"><span>.</span><span>.</span><span>.</span></span>&nbsp;Modeling scenario
+            </div>
+          </article>
+
+          <div id="scenarioResults"></div>
         </section>
       </div>
 

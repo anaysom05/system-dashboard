@@ -2166,3 +2166,30 @@ footer {
 .login-hint strong {
   color: var(--ink);
 }
+
+/* ---- ROI Comparison / Scenario Simulator tabs -----------------------------
+   Buttons and the "working" state reuse .sched-option-btn/.sched-working
+   from Scheduling; the bar chart and table reuse the existing bar-row and
+   table styles. This summary strip is the one genuinely new bit — a compact
+   row of labeled figures under each scenario's metric table. */
+
+.roi-note {
+  margin-top: 10px;
+}
+
+.scenario-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.scenario-summary strong {
+  color: var(--blue);
+  font-weight: 700;
+}

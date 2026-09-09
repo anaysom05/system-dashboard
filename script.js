@@ -2121,174 +2121,7 @@ function initChatbot() {
 
 initChatbot();
 
-/* =========================================================================
-   Scheduling tab
-   -------------------------------------------------------------------------
-   15 hardcoded residents, each with a Mon–Sun shift pattern (Off/Day/Night/
-   24h Call) and a computed weekly-hours total. Three of them are tagged
-   "top" performers and three "burnt" (most burnt-out) — each of those six
-   also carries a hand-authored `optimized` schedule that's visibly lighter
-   than their current one. The three action buttons below the roster each
-   generate a new result card: the two named ones pull their tagged subset's
-   optimized schedule, and the third (balance) applies one uniform, moderate
-   pattern across all 15 residents. Every action shows a 2-second "Wellness
-   Officer is working" state first, to read as an agentic action rather than
-   an instant lookup.
-   ========================================================================= */
 
-const shiftHours = { Off: 0, Day: 12, Night: 12, Call: 24 };
-const shiftClass = { Off: "sched-off", Day: "sched-day", Night: "sched-night", Call: "sched-call" };
-const shiftLabel = { Off: "Off", Day: "Day Shift", Night: "Night Shift", Call: "24h Call" };
-const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-const balancedSchedule = ["Day", "Off", "Day", "Off", "Night", "Off", "Off"];
-
-const residents = [
-  {
-    name: "Dr. A. Whitfield", program: "Family Medicine", tier: "top",
-    schedule: ["Day", "Off", "Day", "Off", "Day", "Off", "Off"],
-    optimized: ["Day", "Off", "Off", "Day", "Off", "Off", "Off"]
-  },
-  {
-    name: "Dr. R. Mensah", program: "Pediatrics", tier: "top",
-    schedule: ["Day", "Off", "Night", "Off", "Day", "Off", "Off"],
-    optimized: ["Day", "Off", "Off", "Off", "Day", "Off", "Off"]
-  },
-  {
-    name: "Dr. K. Nakamura", program: "Psychiatry", tier: "top",
-    schedule: ["Day", "Off", "Day", "Off", "Off", "Day", "Off"],
-    optimized: ["Day", "Off", "Off", "Off", "Off", "Day", "Off"]
-  },
-  {
-    name: "Dr. J. Okafor", program: "Emergency Medicine", tier: "burnt",
-    schedule: ["Night", "Night", "Call", "Off", "Night", "Night", "Off"],
-    optimized: ["Day", "Off", "Day", "Off", "Off", "Day", "Off"]
-  },
-  {
-    name: "Dr. L. Petrova", program: "Surgery", tier: "burnt",
-    schedule: ["Call", "Off", "Night", "Night", "Off", "Call", "Off"],
-    optimized: ["Day", "Off", "Day", "Off", "Day", "Off", "Off"]
-  },
-  {
-    name: "Dr. T. Alvarez", program: "Internal Medicine", tier: "burnt",
-    schedule: ["Night", "Call", "Off", "Night", "Call", "Off", "Night"],
-    optimized: ["Day", "Off", "Day", "Off", "Off", "Day", "Off"]
-  },
-  { name: "Dr. M. Reyes", program: "Anesthesiology", tier: "standard", schedule: ["Day", "Night", "Off", "Day", "Off", "Night", "Off"] },
-  { name: "Dr. E. Larsen", program: "OB/GYN", tier: "standard", schedule: ["Day", "Off", "Night", "Day", "Off", "Off", "Night"] },
-  { name: "Dr. N. Osei", program: "Radiology", tier: "standard", schedule: ["Day", "Day", "Off", "Night", "Off", "Day", "Off"] },
-  { name: "Dr. B. Kowalski", program: "Emergency Medicine", tier: "standard", schedule: ["Night", "Off", "Day", "Night", "Off", "Day", "Off"] },
-  { name: "Dr. H. Suzuki", program: "Surgery", tier: "standard", schedule: ["Day", "Night", "Off", "Day", "Night", "Off", "Off"] },
-  { name: "Dr. F. Dubois", program: "Internal Medicine", tier: "standard", schedule: ["Day", "Off", "Day", "Night", "Off", "Day", "Off"] },
-  { name: "Dr. C. Adeyemi", program: "Family Medicine", tier: "standard", schedule: ["Day", "Off", "Day", "Off", "Day", "Off", "Day"] },
-  { name: "Dr. P. Ibrahim", program: "Pediatrics", tier: "standard", schedule: ["Day", "Day", "Off", "Off", "Night", "Off", "Day"] },
-  { name: "Dr. V. Romano", program: "Psychiatry", tier: "standard", schedule: ["Day", "Off", "Night", "Off", "Day", "Off", "Day"] }
-];
-
-const schedActions = {
-  top: {
-    title: "Optimized Schedule — Retaining Top 3 Residents",
-    subtitle: "Lighter rotations for your highest-performing residents, to keep them engaged and reduce flight risk.",
-    residents: () => residents.filter(r => r.tier === "top").map(r => ({ name: r.name, program: r.program, schedule: r.optimized }))
-  },
-  burnt: {
-    title: "Optimized Schedule — Supporting Most Burnt-Out Residents",
-    subtitle: "Reduced night/call load for the residents showing the highest burnout signals, to protect retention.",
-    residents: () => residents.filter(r => r.tier === "burnt").map(r => ({ name: r.name, program: r.program, schedule: r.optimized }))
-  },
-  balance: {
-    title: "Optimized Schedule — Balanced Workload (All 15 Residents)",
-    subtitle: "One evenly distributed rotation applied across the full roster, so no resident is carrying a disproportionate share.",
-    residents: () => residents.map(r => ({ name: r.name, program: r.program, schedule: balancedSchedule }))
-  }
-};
-
-function scheduleLegendHTML() {
-  return `
-    <div class="sched-legend">
-      <span><span class="day-cell sched-off"></span>Off</span>
-      <span><span class="day-cell sched-day"></span>Day</span>
-      <span><span class="day-cell sched-night"></span>Night</span>
-      <span><span class="day-cell sched-call"></span>24h Call</span>
-    </div>`;
-}
-
-function scheduleHeaderHTML() {
-  return `<div class="sched-days-head"><span></span>${weekDays.map(d => `<span>${d}</span>`).join("")}<span></span></div>`;
-}
-
-function scheduleRowHTML(name, program, schedule) {
-  const hours = schedule.reduce((sum, s) => sum + shiftHours[s], 0);
-  const cells = schedule.map((s, i) => `<span class="day-cell ${shiftClass[s]}" title="${weekDays[i]}: ${shiftLabel[s]}"></span>`).join("");
-  return `
-    <div class="sched-row">
-      <div class="sched-info">
-        <span class="sched-name">${name}</span>
-        <span class="sched-program">${program}</span>
-      </div>
-      ${cells}
-      <strong class="sched-hours">${hours}h</strong>
-    </div>`;
-}
-
-function scheduleTableHTML(rows) {
-  return scheduleHeaderHTML() + rows.map(r => scheduleRowHTML(r.name, r.program, r.schedule)).join("");
-}
-
-function renderCurrentSchedules() {
-  const legendHost = document.querySelector("#schedCurrent");
-  if (!legendHost) return;
-  legendHost.innerHTML = scheduleLegendHTML() + scheduleTableHTML(residents.map(r => ({ name: r.name, program: r.program, schedule: r.schedule })));
-}
-
-function initScheduling() {
-  renderCurrentSchedules();
-
-  const optionsHost = document.querySelector("#schedOptions");
-  const working = document.querySelector("#schedWorking");
-  const resultsHost = document.querySelector("#schedResults");
-  if (!optionsHost || !working || !resultsHost) return;
-
-  let busy = false;
-
-  optionsHost.addEventListener("click", event => {
-    const btn = event.target.closest("[data-sched-action]");
-    if (!btn || busy) return;
-    const action = schedActions[btn.dataset.schedAction];
-    if (!action) return;
-
-    busy = true;
-    optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = true; });
-    working.classList.add("visible");
-
-    window.setTimeout(() => {
-      working.classList.remove("visible");
-
-      try {
-        const card = el("article", "card sched-card sched-result", `
-          <div class="head">
-            <div>
-              <h2>${action.title}</h2>
-              <p>${action.subtitle}</p>
-            </div>
-          </div>
-          ${scheduleLegendHTML()}
-          ${scheduleTableHTML(action.residents())}
-        `);
-        resultsHost.appendChild(card);
-        if (typeof card.scrollIntoView === "function") card.scrollIntoView({ behavior: "smooth", block: "start" });
-      } finally {
-        /* Always re-enable, even if building/inserting the card above threw
-           for some unforeseen reason — the alternative is a permanently
-           disabled action row with no way to recover without a reload. */
-        optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = false; });
-        busy = false;
-      }
-    }, 2000);
-  });
-}
-
-initScheduling();
 
 /* =========================================================================
    ROI Comparison tab (CEO)
@@ -2337,95 +2170,7 @@ function renderRoiComparison() {
 
 renderRoiComparison();
 
-/* =========================================================================
-   Scenario Simulator tab (Director)
-   -------------------------------------------------------------------------
-   Same agentic pattern as Scheduling: pick a scenario, see a "Modeling
-   scenario…" state for ~2s, then a result card appends below (stacking,
-   not replacing, if more than one scenario is run).
-   ========================================================================= */
 
-const scenarioActions = {
-  apps: {
-    title: "Simulated Impact — Hire 2 APPs for the Emergency Department",
-    subtitle: "Modeled effect of adding two advanced practice providers to ED staffing.",
-    rows: [
-      ["Physician Workload", "↓ 11%"],
-      ["Burnout Risk", "↓ 15%"],
-      ["After-Hours Documentation", "↓ 21%"],
-      ["Retention Risk", "↓ 9%"]
-    ],
-    summary: [
-      ["Estimated Annual Savings", "$1.6M"],
-      ["Payback Period", "7 months"],
-      ["Confidence", "78%"]
-    ]
-  },
-  call: {
-    title: "Simulated Impact — Eliminate 24-Hour Call Shifts",
-    subtitle: "Modeled effect of removing 24-hour call shifts from the rotation.",
-    rows: [
-      ["Average Sleep", "+53 min"],
-      ["Recovery Scores", "+18%"],
-      ["Burnout Risk", "−22%"],
-      ["Turnover Risk", "−11%"]
-    ],
-    summary: [
-      ["Cost Increase", "$640,000"],
-      ["Estimated Savings", "$2.1M"],
-      ["Net Benefit", "+$1.46M"]
-    ]
-  }
-};
-
-function scenarioResultHTML(action) {
-  const rowsHTML = action.rows.map(([label, value]) => `<tr><td>${label}</td><td class="up">${value}</td></tr>`).join("");
-  const summaryHTML = action.summary.map(([label, value]) => `<span>${label}: <strong>${value}</strong></span>`).join("");
-  return `
-    <div class="head">
-      <div>
-        <h2>${action.title}</h2>
-        <p>${action.subtitle}</p>
-      </div>
-    </div>
-    <table><thead><tr><th>Metric</th><th>Projected Change</th></tr></thead><tbody>${rowsHTML}</tbody></table>
-    <div class="scenario-summary">${summaryHTML}</div>`;
-}
-
-function initScenarioSimulator() {
-  const optionsHost = document.querySelector("#scenarioOptions");
-  const working = document.querySelector("#scenarioWorking");
-  const resultsHost = document.querySelector("#scenarioResults");
-  if (!optionsHost || !working || !resultsHost) return;
-
-  let busy = false;
-
-  optionsHost.addEventListener("click", event => {
-    const btn = event.target.closest("[data-scenario-action]");
-    if (!btn || busy) return;
-    const action = scenarioActions[btn.dataset.scenarioAction];
-    if (!action) return;
-
-    busy = true;
-    optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = true; });
-    working.classList.add("visible");
-
-    window.setTimeout(() => {
-      working.classList.remove("visible");
-
-      try {
-        const card = el("article", "card sched-card sched-result", scenarioResultHTML(action));
-        resultsHost.appendChild(card);
-        if (typeof card.scrollIntoView === "function") card.scrollIntoView({ behavior: "smooth", block: "start" });
-      } finally {
-        optionsHost.querySelectorAll(".sched-option-btn").forEach(b => { b.disabled = false; });
-        busy = false;
-      }
-    }, 2000);
-  });
-}
-
-initScenarioSimulator();
 
 /* =========================================================================
    Login / role gating
@@ -2471,13 +2216,13 @@ function clearStoredRole() {
   }
 }
 
-/* Which view requires which role. Scheduling and the Scenario Simulator are
-   Director-only; ROI Comparison is CEO-only. Referenced both here (to show/
-   hide each nav item and bounce off a now-restricted view) and in
-   switchView() (to block reaching a restricted view any other way). */
+/* Which shared-shell view requires which role. Director now gets an entirely
+   separate shell (#directorRoot, see the Director dashboard section below)
+   rather than individual restricted tabs inside the CEO shell, so this only
+   still matters for ROI Comparison, which stays CEO-only inside #appRoot.
+   Referenced here (to show/hide the nav item and bounce off a now-restricted
+   view) and in switchView() (to block reaching it any other way). */
 const roleRestrictedViews = {
-  "v-scheduling": "director",
-  "v-scenario": "director",
   "v-roi": "ceo"
 };
 
@@ -2497,9 +2242,590 @@ function applyRolePermissions(role) {
   });
 }
 
+/* =========================================================================
+   Director Dashboard — real emPower "Program Director" experience
+   -------------------------------------------------------------------------
+   All charts use ECharts (loaded via CDN in index.html) to match the real
+   product's chart engine for gauges/tree-maps, and are used for the bar/
+   line charts too so only one charting library needs to load. Gauge value
+   ranges, risk-level thresholds, and the two color-segment orderings
+   (THEME_ONE = low-is-good, THEME_TWO = high-is-good) are taken directly
+   from the real codebase's graphics.utils.ts, not approximated. Data itself
+   is static/invented, since this remains a no-backend prototype.
+   ========================================================================= */
+
+const QUALITY_COLORS = { excellent: "#B6DB38", neutral: "#6BC4FF", mediocre: "#FF9204", dangerous: "#FF191C" };
+const THEME_ONE = [QUALITY_COLORS.excellent, QUALITY_COLORS.neutral, QUALITY_COLORS.mediocre, QUALITY_COLORS.dangerous]; // low value = good
+const THEME_TWO = [QUALITY_COLORS.dangerous, QUALITY_COLORS.mediocre, QUALITY_COLORS.neutral, QUALITY_COLORS.excellent]; // high value = good
+
+const MONTHS_6 = ["Dec '23", "Jan '24", "Feb '24", "Mar '24", "Apr '24", "May '24"];
+
+const FREQUENCY_LABELS = ["Never", "Rarely", "Sometimes", "Often", "Always"];
+const FREQUENCY_COLORS = ["#f04438", "#ff9204", "#6bc4ff", "#a8d9d7", "#0c9590"];
+
+function riskLevelFor(value, ranges) {
+  if (!ranges) return "";
+  for (const r of ranges) {
+    if (value >= r.min && value <= r.max) return r.level;
+  }
+  return "";
+}
+
+function gaugeSegmentColor(value, min, max, segColors) {
+  const ratio = (value - min) / (max - min);
+  if (ratio <= 0.25) return segColors[0];
+  if (ratio <= 0.5) return segColors[1];
+  if (ratio <= 0.75) return segColors[2];
+  return segColors[3];
+}
+
+function disposeChartIfAny(el) {
+  if (typeof echarts !== "undefined" && el) {
+    const existing = echarts.getInstanceByDom(el);
+    if (existing) existing.dispose();
+  }
+}
+
+/* ---- Static data (real metric names, invented static values) ------------- */
+
+const directorData = {
+  overview: {
+    totalSeats: { categories: MONTHS_6, values: [24, 24, 23, 24, 24, 24] },
+    assessmentParticipants: { total: 21, categories: MONTHS_6, values: [17, 18, 19, 20, 19, 21] },
+    engagement: { value: 78, trend: 4, trendGood: true },
+    wellnessScore: { value: 22, trend: 2, trendGood: true },
+    burnoutInternal: { value: 11, trend: -1, trendGood: true },
+    burnoutExternal: { value: 6, trend: 1, trendGood: false },
+    burnoutCombined: { value: 18, trend: 3, trendGood: false },
+    sleepQuality: [
+      { name: "Poor", value: 12 },
+      { name: "Fair", value: 26 },
+      { name: "Good", value: 38 },
+      { name: "Great", value: 24 }
+    ],
+    sleepQuantity: { categories: ["<5h", "5-6h", "6-7h", "7-8h", "8h+"], values: [8, 18, 30, 32, 12] }
+  },
+  wellness: {
+    average: { value: 22, trend: 2, trendGood: true },
+    byLevel: { categories: ["Excellent", "Neutral", "Mediocre", "Dangerous"], values: [22, 40, 28, 10] },
+    target: { value: 62, trend: 5, trendGood: true },
+    answers: [
+      { title: "I feel I have adequate time for rest between shifts", dist: [8, 14, 28, 32, 18] },
+      { title: "My workload feels manageable this month", dist: [12, 18, 26, 28, 16] }
+    ]
+  },
+  burnoutInternal: {
+    average: { value: 11, trend: -1, trendGood: true },
+    byLevel: { categories: ["Excellent", "Neutral", "Mediocre", "Dangerous"], values: [30, 38, 22, 10] },
+    target: { value: 58, trend: 4, trendGood: true },
+    answers: [
+      { title: "I feel emotionally exhausted by my work", dist: [10, 16, 30, 26, 18] },
+      { title: "I feel a sense of accomplishment in my role", dist: [6, 12, 24, 34, 24] }
+    ]
+  },
+  burnoutExternal: {
+    average: { value: 6, trend: 1, trendGood: false },
+    byLevel: { categories: ["Excellent", "Neutral", "Mediocre", "Dangerous"], values: [24, 34, 28, 14] },
+    target: { value: 64, trend: 2, trendGood: true },
+    answers: [
+      { title: "I feel supported by hospital leadership", dist: [14, 20, 28, 24, 14] },
+      { title: "I have access to adequate mental health resources", dist: [10, 16, 26, 30, 18] }
+    ]
+  },
+  burnoutCombined: {
+    value: 18,
+    trend: 3,
+    trendGood: false,
+    byPgy: { categories: ["PGY-1", "PGY-2", "PGY-3", "PGY-4+"], values: [12, 26, 22, 9] }
+  },
+  sleep: {
+    quality: [
+      { name: "Poor", value: 12 },
+      { name: "Fair", value: 26 },
+      { name: "Good", value: 38 },
+      { name: "Great", value: 24 }
+    ],
+    meetingTarget: { total: 54, categories: MONTHS_6, values: [48, 50, 49, 52, 51, 54] },
+    quantity: { categories: ["<5h", "5-6h", "6-7h", "7-8h", "8h+"], values: [8, 18, 30, 32, 12] },
+    average: { total: 6.4, categories: MONTHS_6, values: [6.1, 6.2, 6.0, 6.3, 6.2, 6.4] }
+  }
+};
+
+const gaugeRanges = {
+  engagement: { min: 0, max: 100, theme: THEME_TWO },
+  wellnessScore: {
+    min: 6, max: 30, theme: THEME_TWO,
+    riskRanges: [
+      { level: "Excellent", min: 25, max: 30 },
+      { level: "Neutral", min: 19, max: 24 },
+      { level: "Mediocre", min: 13, max: 18 },
+      { level: "Dangerous", min: 6, max: 12 }
+    ]
+  },
+  burnoutInternal: {
+    min: 4, max: 20, theme: THEME_ONE,
+    riskRanges: [
+      { level: "Excellent", min: 4, max: 7 },
+      { level: "Neutral", min: 8, max: 12 },
+      { level: "Mediocre", min: 13, max: 15 },
+      { level: "Dangerous", min: 16, max: 20 }
+    ]
+  },
+  burnoutExternal: {
+    min: 2, max: 10, theme: THEME_ONE,
+    riskRanges: [
+      { level: "Excellent", min: 2, max: 4 },
+      { level: "Neutral", min: 5, max: 5 },
+      { level: "Mediocre", min: 6, max: 7 },
+      { level: "Dangerous", min: 8, max: 10 }
+    ]
+  },
+  percent: {
+    min: 0, max: 100, theme: THEME_ONE,
+    riskRanges: [
+      { level: "Excellent", min: 0, max: 15 },
+      { level: "Neutral", min: 16, max: 25 },
+      { level: "Mediocre", min: 26, max: 40 },
+      { level: "Dangerous", min: 41, max: 100 }
+    ]
+  },
+  percentGood: {
+    min: 0, max: 100, theme: THEME_TWO,
+    riskRanges: [
+      { level: "Dangerous", min: 0, max: 40 },
+      { level: "Mediocre", min: 41, max: 55 },
+      { level: "Neutral", min: 56, max: 70 },
+      { level: "Excellent", min: 71, max: 100 }
+    ]
+  }
+};
+
+/* ---- Chart builders -------------------------------------------------------- */
+
+function renderGauge(elId, { value, rangeKey, unit = "" }) {
+  const el = document.getElementById(elId);
+  if (!el || typeof echarts === "undefined") return;
+  disposeChartIfAny(el);
+  const range = gaugeRanges[rangeKey];
+  const color = gaugeSegmentColor(value, range.min, range.max, range.theme);
+  const chart = echarts.init(el);
+  chart.setOption({
+    series: [{
+      type: "gauge",
+      startAngle: 210,
+      endAngle: -30,
+      min: range.min,
+      max: range.max,
+      splitNumber: 4,
+      axisTick: { show: false },
+      splitLine: { show: false },
+      axisLabel: {
+        distance: -30,
+        fontFamily: "Poppins, sans-serif",
+        fontSize: 10,
+        fontWeight: 500,
+        color: "#9da4ae",
+        formatter: v => `${v}${unit}`
+      },
+      axisLine: {
+        roundCap: true,
+        lineStyle: {
+          width: 16,
+          color: [
+            [0.25, range.theme[0]],
+            [0.5, range.theme[1]],
+            [0.75, range.theme[2]],
+            [1, range.theme[3]]
+          ]
+        }
+      },
+      pointer: { length: "52%", width: 5, itemStyle: { color } },
+      detail: {
+        valueAnimation: true,
+        fontFamily: "Poppins, sans-serif",
+        fontWeight: 700,
+        fontSize: 30,
+        offsetCenter: [0, "0%"],
+        formatter: v => `${Math.round(v)}${unit}`,
+        color
+      },
+      data: [{ value }]
+    }]
+  });
+  return { color, status: riskLevelFor(value, range.riskRanges) };
+}
+
+function renderBarChart(elId, { categories, values, suffix = "", color = "#124f4d", maxY }) {
+  const el = document.getElementById(elId);
+  if (!el || typeof echarts === "undefined") return;
+  disposeChartIfAny(el);
+  const chart = echarts.init(el);
+  chart.setOption({
+    grid: { left: 34, right: 10, top: 30, bottom: 26 },
+    xAxis: {
+      type: "category",
+      data: categories,
+      axisLine: { lineStyle: { color: "#dddddc" } },
+      axisTick: { show: false },
+      axisLabel: { fontFamily: "Poppins, sans-serif", fontSize: 10, color: "#4d5762" }
+    },
+    yAxis: {
+      type: "value",
+      max: maxY,
+      splitLine: { lineStyle: { color: "#f0f0f0" } },
+      axisLabel: { fontFamily: "Poppins, sans-serif", fontSize: 10, color: "#4d5762", formatter: v => `${v}${suffix}` }
+    },
+    series: [{
+      type: "bar",
+      data: values,
+      barWidth: "48%",
+      itemStyle: { color, borderRadius: [6, 6, 0, 0] },
+      label: {
+        show: true,
+        position: "top",
+        fontFamily: "Poppins, sans-serif",
+        fontSize: 11,
+        fontWeight: 600,
+        color: "#121927",
+        formatter: p => `${p.value}${suffix}`
+      }
+    }]
+  });
+}
+
+function renderLineChart(elId, { categories, values, color = "#124f4d", maxY }) {
+  const el = document.getElementById(elId);
+  if (!el || typeof echarts === "undefined") return;
+  disposeChartIfAny(el);
+  const chart = echarts.init(el);
+  chart.setOption({
+    grid: { left: 34, right: 10, top: 20, bottom: 26 },
+    xAxis: {
+      type: "category",
+      data: categories,
+      boundaryGap: false,
+      axisLine: { lineStyle: { color: "#dddddc" } },
+      axisTick: { show: false },
+      axisLabel: { fontFamily: "Poppins, sans-serif", fontSize: 10, color: "#4d5762" }
+    },
+    yAxis: {
+      type: "value",
+      min: 0,
+      max: maxY,
+      splitLine: { lineStyle: { color: "#f0f0f0" } },
+      axisLabel: { fontFamily: "Poppins, sans-serif", fontSize: 10, color: "#4d5762" }
+    },
+    series: [{
+      type: "line",
+      data: values,
+      smooth: true,
+      symbolSize: 7,
+      lineStyle: { width: 2, color },
+      itemStyle: { color },
+      areaStyle: { color, opacity: 0.06 }
+    }]
+  });
+}
+
+function renderTreeMap(elId, { data, colors }) {
+  const el = document.getElementById(elId);
+  if (!el || typeof echarts === "undefined") return;
+  disposeChartIfAny(el);
+  const chart = echarts.init(el);
+  chart.setOption({
+    series: [{
+      type: "treemap",
+      roam: false,
+      nodeClick: false,
+      breadcrumb: { show: false },
+      itemStyle: { borderRadius: 6, borderWidth: 2, borderColor: "#fff", gapWidth: 3 },
+      label: {
+        show: true,
+        formatter: p => `${p.value}% ${p.name}`,
+        fontFamily: "Poppins, sans-serif",
+        fontSize: 12,
+        fontWeight: 500,
+        color: "#fff"
+      },
+      data: data.map((d, i) => ({ name: d.name, value: d.value, itemStyle: { color: colors[i % colors.length] } }))
+    }]
+  });
+}
+
+function renderAnswerRows(containerId, questions) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const rows = questions.map(q => `
+    <div class="d-answer-row">
+      <p class="d-answer-question">${q.title}</p>
+      <div class="d-answer-bar">
+        ${q.dist.map((pct, i) => `<div class="d-answer-seg" style="width:${pct}%; background:${FREQUENCY_COLORS[i]}">${pct >= 8 ? pct + "%" : ""}</div>`).join("")}
+      </div>
+    </div>`).join("");
+  const legend = `<div class="d-answer-legend">${FREQUENCY_LABELS.map((label, i) => `<span><span class="dot" style="background:${FREQUENCY_COLORS[i]}"></span>${label}</span>`).join("")}</div>`;
+  el.innerHTML = rows + legend;
+}
+
+/* ---- Card markup + caption helpers ---------------------------------------- */
+
+function gaugeCardHTML(chartId, title) {
+  return `
+    <article class="d-card">
+      <div class="d-card-title-row"><span class="d-card-title">${title}</span></div>
+      <div class="d-chart-el d-gauge" id="${chartId}"></div>
+      <div class="d-gauge-caption" id="${chartId}-caption"></div>
+    </article>`;
+}
+
+function chartCardHTML(chartId, title, { total, unit } = {}) {
+  return `
+    <article class="d-card">
+      <div class="d-card-title-row">
+        <span class="d-card-title">${title}</span>
+        ${total !== undefined ? `<span class="d-card-total">${total}${unit || ""}</span>` : ""}
+      </div>
+      <div class="d-chart-el" id="${chartId}"></div>
+    </article>`;
+}
+
+function fillGaugeCaption(chartId, { status, statusColor, dateRange = "May '24", trend, trendGood, unit = "" }) {
+  const el = document.getElementById(`${chartId}-caption`);
+  if (!el) return;
+  el.innerHTML = `
+    ${status ? `<span style="color:${statusColor}; font-weight:600; font-size:13px;">${status}</span>` : ""}
+    <span class="d-gauge-date">${dateRange}</span>
+    <span class="d-gauge-trend">
+      <span class="d-trend-pill ${trendGood ? "good" : "bad"}">${trend >= 0 ? "▲" : "▼"} ${Math.abs(trend)}${unit}</span>
+      <span class="d-trend-caption">vs last month</span>
+    </span>`;
+}
+
+function renderGaugeCard(chartId, value, rangeKey, trend, trendGood, unit = "") {
+  const result = renderGauge(chartId, { value, rangeKey, unit });
+  if (result) fillGaugeCaption(chartId, { status: result.status, statusColor: result.color, trend, trendGood, unit });
+}
+
+/* ---- Tab render functions -------------------------------------------------- */
+
+function renderOverviewTab() {
+  const host = document.getElementById("dOverviewGrid");
+  if (!host) return;
+  const d = directorData.overview;
+  host.innerHTML =
+    chartCardHTML("dTotalSeats", "Total seats") +
+    chartCardHTML("dAssessmentParticipants", "May assessment participants", { total: d.assessmentParticipants.total }) +
+    gaugeCardHTML("dEngagement", "May engagement") +
+    gaugeCardHTML("dWellnessScore", "Wellness average score") +
+    gaugeCardHTML("dBurnoutInternal", "Internal burnout average score") +
+    gaugeCardHTML("dBurnoutExternal", "External burnout average score") +
+    gaugeCardHTML("dBurnoutCombined", "Residents with internal and external burnout") +
+    chartCardHTML("dSleepQuality", "Sleep quality") +
+    chartCardHTML("dSleepQuantity", "Sleep quantity");
+
+  renderBarChart("dTotalSeats", { categories: d.totalSeats.categories, values: d.totalSeats.values, color: "#124f4d" });
+  renderLineChart("dAssessmentParticipants", { categories: d.assessmentParticipants.categories, values: d.assessmentParticipants.values, color: "#124f4d" });
+  renderGaugeCard("dEngagement", d.engagement.value, "engagement", d.engagement.trend, d.engagement.trendGood, "%");
+  renderGaugeCard("dWellnessScore", d.wellnessScore.value, "wellnessScore", d.wellnessScore.trend, d.wellnessScore.trendGood);
+  renderGaugeCard("dBurnoutInternal", d.burnoutInternal.value, "burnoutInternal", d.burnoutInternal.trend, d.burnoutInternal.trendGood);
+  renderGaugeCard("dBurnoutExternal", d.burnoutExternal.value, "burnoutExternal", d.burnoutExternal.trend, d.burnoutExternal.trendGood);
+  renderGaugeCard("dBurnoutCombined", d.burnoutCombined.value, "percent", d.burnoutCombined.trend, d.burnoutCombined.trendGood, "%");
+  renderTreeMap("dSleepQuality", { data: d.sleepQuality, colors: [QUALITY_COLORS.dangerous, QUALITY_COLORS.mediocre, QUALITY_COLORS.neutral, QUALITY_COLORS.excellent] });
+  renderBarChart("dSleepQuantity", { categories: d.sleepQuantity.categories, values: d.sleepQuantity.values, suffix: "%", color: "#124f4d", maxY: 60 });
+}
+
+function renderWellnessTab() {
+  const host = document.getElementById("dWellnessGrid");
+  if (!host) return;
+  const d = directorData.wellness;
+  host.innerHTML =
+    gaugeCardHTML("dWellAvg", "Average score") +
+    chartCardHTML("dWellByLevel", "% residents at each score level") +
+    gaugeCardHTML("dWellTarget", "Residents reaching the target");
+
+  renderGaugeCard("dWellAvg", d.average.value, "wellnessScore", d.average.trend, d.average.trendGood);
+  renderBarChart("dWellByLevel", { categories: d.byLevel.categories, values: d.byLevel.values, suffix: "%", color: "#124f4d", maxY: 100 });
+  renderGaugeCard("dWellTarget", d.target.value, "percentGood", d.target.trend, d.target.trendGood, "%");
+
+  renderAnswerRows("dWellnessAnswers", d.answers);
+}
+
+function renderBurnoutTab() {
+  const gridInt = document.getElementById("dBurnoutInternalGrid");
+  const gridExt = document.getElementById("dBurnoutExternalGrid");
+  const gridCombined = document.getElementById("dBurnoutCombinedGrid");
+  if (!gridInt || !gridExt || !gridCombined) return;
+
+  const int = directorData.burnoutInternal;
+  const ext = directorData.burnoutExternal;
+  const combined = directorData.burnoutCombined;
+
+  gridInt.innerHTML =
+    gaugeCardHTML("dBiAvg", "Average score") +
+    chartCardHTML("dBiByLevel", "% residents at each score level") +
+    gaugeCardHTML("dBiTarget", "Residents reaching the target");
+  renderGaugeCard("dBiAvg", int.average.value, "burnoutInternal", int.average.trend, int.average.trendGood);
+  renderBarChart("dBiByLevel", { categories: int.byLevel.categories, values: int.byLevel.values, suffix: "%", color: "#124f4d", maxY: 100 });
+  renderGaugeCard("dBiTarget", int.target.value, "percentGood", int.target.trend, int.target.trendGood, "%");
+  renderAnswerRows("dBurnoutInternalAnswers", int.answers);
+
+  gridExt.innerHTML =
+    gaugeCardHTML("dBeAvg", "External burnout average score") +
+    chartCardHTML("dBeByLevel", "% residents at each score level") +
+    gaugeCardHTML("dBeTarget", "Residents reaching the target");
+  renderGaugeCard("dBeAvg", ext.average.value, "burnoutExternal", ext.average.trend, ext.average.trendGood);
+  renderBarChart("dBeByLevel", { categories: ext.byLevel.categories, values: ext.byLevel.values, suffix: "%", color: "#124f4d", maxY: 100 });
+  renderGaugeCard("dBeTarget", ext.target.value, "percentGood", ext.target.trend, ext.target.trendGood, "%");
+  renderAnswerRows("dBurnoutExternalAnswers", ext.answers);
+
+  gridCombined.innerHTML =
+    gaugeCardHTML("dCombined", "Residents with internal and external burnout") +
+    chartCardHTML("dCombinedByPgy", "Residents meeting both internally and externally burned out");
+  renderGaugeCard("dCombined", combined.value, "percent", combined.trend, combined.trendGood, "%");
+  renderBarChart("dCombinedByPgy", { categories: combined.byPgy.categories, values: combined.byPgy.values, suffix: "%", color: "#124f4d", maxY: 100 });
+}
+
+function renderSleepTab() {
+  const gridQuality = document.getElementById("dSleepQualityGrid");
+  const gridQuantity = document.getElementById("dSleepQuantityGrid");
+  if (!gridQuality || !gridQuantity) return;
+  const d = directorData.sleep;
+
+  gridQuality.innerHTML =
+    chartCardHTML("dSleepQualityTree", "Sleep quality") +
+    chartCardHTML("dSleepMeetingTarget", "Meeting target of 7 and above", { total: d.meetingTarget.total, unit: "%" });
+  renderTreeMap("dSleepQualityTree", { data: d.quality, colors: [QUALITY_COLORS.dangerous, QUALITY_COLORS.mediocre, QUALITY_COLORS.neutral, QUALITY_COLORS.excellent] });
+  renderLineChart("dSleepMeetingTarget", { categories: d.meetingTarget.categories, values: d.meetingTarget.values, color: "#124f4d", maxY: 100 });
+
+  gridQuantity.innerHTML =
+    chartCardHTML("dSleepQuantityBar", "Sleep quantity") +
+    chartCardHTML("dSleepAverage", "Average quantity", { total: d.average.total, unit: "h" });
+  renderBarChart("dSleepQuantityBar", { categories: d.quantity.categories, values: d.quantity.values, suffix: "%", color: "#124f4d", maxY: 60 });
+  renderLineChart("dSleepAverage", { categories: d.average.categories, values: d.average.values, color: "#124f4d", maxY: 10 });
+}
+
+/* ---- Wiring: sidebar nav, tabs, filters, collapse, user menu --------------- */
+
+let directorDashboardInitialized = false;
+
+function renderDirectorTab(tab) {
+  if (tab === "overview") renderOverviewTab();
+  else if (tab === "wellness") renderWellnessTab();
+  else if (tab === "burnout") renderBurnoutTab();
+  else if (tab === "sleep") renderSleepTab();
+}
+
+function closeAllDirectorMenus() {
+  document.querySelectorAll("#directorRoot .d-dropdown.open, #directorRoot .d-user-menu.open").forEach(m => m.classList.remove("open"));
+  document.querySelectorAll("#directorRoot [aria-expanded='true']").forEach(b => b.setAttribute("aria-expanded", "false"));
+}
+
+function wireDirectorNav() {
+  document.querySelectorAll("#directorRoot .d-nav-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.dview;
+      document.querySelectorAll("#directorRoot .d-nav-item").forEach(b => b.classList.toggle("active", b === btn));
+      document.querySelectorAll("#directorRoot .d-view").forEach(v => v.classList.toggle("active", v.id === target));
+    });
+  });
+}
+
+function wireDirectorTabs() {
+  document.querySelectorAll("#directorRoot .d-tab").forEach(tabBtn => {
+    tabBtn.addEventListener("click", () => {
+      const target = tabBtn.dataset.dtab;
+      document.querySelectorAll("#directorRoot .d-tab").forEach(t => t.classList.toggle("active", t === tabBtn));
+      document.querySelectorAll("#directorRoot .d-tab-panel").forEach(p => p.classList.toggle("active", p.id === `d-tab-${target}`));
+      renderDirectorTab(target);
+    });
+  });
+}
+
+function wireDirectorSidebarCollapse() {
+  const btn = document.getElementById("dCollapseBtn");
+  const side = document.getElementById("dSide");
+  if (!btn || !side) return;
+  btn.addEventListener("click", () => side.classList.toggle("collapsed"));
+}
+
+function wireDirectorUserMenu() {
+  const btn = document.getElementById("dUserMenuBtn");
+  const menu = document.getElementById("dUserMenu");
+  if (!btn || !menu) return;
+  btn.addEventListener("click", event => {
+    event.stopPropagation();
+    const willOpen = !menu.classList.contains("open");
+    closeAllDirectorMenus();
+    menu.classList.toggle("open", willOpen);
+    btn.setAttribute("aria-expanded", String(willOpen));
+  });
+}
+
+function setupDirectorDropdown(btnId, menuId, labelId, options) {
+  const btn = document.getElementById(btnId);
+  const menu = document.getElementById(menuId);
+  const label = document.getElementById(labelId);
+  if (!btn || !menu || !label) return;
+
+  let active = options[0];
+
+  function renderMenu() {
+    menu.innerHTML = options.map(opt => `<button type="button" class="d-dropdown-item ${opt === active ? "active" : ""}" data-value="${opt}">${opt}</button>`).join("");
+  }
+  renderMenu();
+
+  btn.addEventListener("click", event => {
+    event.stopPropagation();
+    const willOpen = !menu.classList.contains("open");
+    closeAllDirectorMenus();
+    menu.classList.toggle("open", willOpen);
+    btn.setAttribute("aria-expanded", String(willOpen));
+  });
+
+  menu.addEventListener("click", event => {
+    const item = event.target.closest("[data-value]");
+    if (!item) return;
+    active = item.dataset.value;
+    label.textContent = active;
+    renderMenu();
+    menu.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  });
+}
+
+function wireDirectorFilters() {
+  setupDirectorDropdown("dPgyBtn", "dPgyMenu", "dPgyLabel", ["All PGY Levels", "PGY-1", "PGY-2", "PGY-3", "PGY-4+"]);
+  setupDirectorDropdown("dMonthBtn", "dMonthMenu", "dMonthLabel", ["May 2024", "Apr 2024", "Mar 2024", "Feb 2024"]);
+
+  /* Uses composedPath() (captured at dispatch time) rather than checking
+     event.target after the fact — the same DOM-mutation-during-click
+     pitfall already found and fixed for the AI-CWO chat panel applies here
+     too, since selecting a dropdown item re-renders that dropdown's HTML
+     mid-bubble. */
+  document.addEventListener("click", event => {
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    const insideDirectorControl = path.some(node =>
+      node && node.classList && (node.classList.contains("d-pill-wrap") || node.classList.contains("d-user-wrap"))
+    );
+    if (!insideDirectorControl) closeAllDirectorMenus();
+  });
+}
+
+function initDirectorDashboard() {
+  if (!directorDashboardInitialized) {
+    wireDirectorNav();
+    wireDirectorTabs();
+    wireDirectorFilters();
+    wireDirectorSidebarCollapse();
+    wireDirectorUserMenu();
+    directorDashboardInitialized = true;
+  }
+  renderDirectorTab("overview");
+}
+
 function initLogin() {
   const loginScreen = document.querySelector("#loginScreen");
   const appRoot = document.querySelector("#appRoot");
+  const directorRoot = document.querySelector("#directorRoot");
   const form = document.querySelector("#loginForm");
   const emailInput = document.querySelector("#loginEmail");
   const passwordInput = document.querySelector("#loginPassword");
@@ -2508,14 +2834,22 @@ function initLogin() {
   const userMenuBtn = document.querySelector("#userMenuBtn");
   const userMenu = document.querySelector("#userMenu");
   const logoutBtn = document.querySelector("#logoutBtn");
+  const dLogoutBtn = document.querySelector("#dLogoutBtn");
   if (!loginScreen || !appRoot || !form) return;
 
   function showApp(role) {
     currentRole = role;
     loginScreen.classList.add("dismissed");
-    appRoot.classList.add("visible");
-    applyRolePermissions(role);
-    if (userMenuLabel) userMenuLabel.textContent = role === "ceo" ? "CEO — Lifespan" : "Director — Lifespan";
+    if (role === "director") {
+      appRoot.classList.remove("visible");
+      if (directorRoot) directorRoot.classList.add("visible");
+      initDirectorDashboard();
+    } else {
+      if (directorRoot) directorRoot.classList.remove("visible");
+      appRoot.classList.add("visible");
+      applyRolePermissions(role);
+      if (userMenuLabel) userMenuLabel.textContent = "CEO — Lifespan";
+    }
   }
 
   function logOut() {
@@ -2524,6 +2858,7 @@ function initLogin() {
     form.reset();
     if (errorEl) errorEl.classList.remove("visible");
     appRoot.classList.remove("visible");
+    if (directorRoot) directorRoot.classList.remove("visible");
     loginScreen.classList.remove("dismissed");
     closeAllMenus();
     if (emailInput) window.setTimeout(() => emailInput.focus(), 50);
@@ -2554,6 +2889,7 @@ function initLogin() {
   });
 
   if (logoutBtn) logoutBtn.addEventListener("click", logOut);
+  if (dLogoutBtn) dLogoutBtn.addEventListener("click", logOut);
 
   if (userMenuBtn && userMenu) {
     userMenuBtn.addEventListener("click", event => {

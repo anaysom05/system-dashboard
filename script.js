@@ -1575,6 +1575,374 @@ const chwoCategories = [
            "Expected Time to Impact: 6–8 weeks"
       }
     ]
+  },
+
+  /* ---- Resident Scheduling queries — appended as their own set of
+     categories rather than folded into the existing ones above, since
+     they're a distinct operational layer (day-to-day resident scheduling)
+     under the same broader workforce umbrella. Answers are grounded in the
+     actual 15-resident roster on the Scheduling tab (3 top performers at
+     24–36h/week, 3 burnt-out residents at 72–84h/week, 9 standard-tier
+     residents at 48h/week) so references to specific residents and hours
+     stay consistent with what that tab shows. */
+
+  {
+    id: "daily-ops",
+    title: "Daily Operations",
+    questions: [
+      {
+        q: "Which residents are scheduled to work today in the ICU?",
+        a: `<strong>Today's ICU Coverage</strong><br><br>Dr. J. Okafor (Emergency Medicine) and Dr. T. Alvarez (Internal Medicine) are covering ICU overnight; daytime ICU coverage rotates among Internal Medicine and Surgery residents.<br><br>Full shift-by-shift detail is on the Scheduling tab.`
+      },
+      {
+        q: "Who is currently on night float this week?",
+        a: `<strong>Night Float — This Week</strong><br><br>Dr. J. Okafor, Dr. L. Petrova, and Dr. T. Alvarez are carrying the heaviest night/call load this week, with 2–3 Night or 24h Call shifts each.<br><br>Together they account for the bulk of this week's overnight coverage.`
+      },
+      {
+        q: "Show me next month's emergency medicine coverage schedule.",
+        a: `<strong>Emergency Medicine — Next Month</strong><br><br>Draft coverage is built but not yet finalized. Dr. J. Okafor and Dr. B. Kowalski anchor EM night coverage; daytime EM slots remain to be confirmed pending the upcoming resident rotation change.<br><br>Recommended: Finalize by the 20th to allow two weeks' notice.`
+      },
+      {
+        q: "Which shifts remain unfilled over the next 30 days?",
+        a: `<strong>Unfilled Shifts — Next 30 Days</strong><br><br>3 Night shifts and 1 24h Call shift are currently unassigned, concentrated in the second week of the period.<br><br>⚠ Two of the open Night shifts fall on the same weekend — recommend filling those first to avoid a coverage gap.`
+      },
+      {
+        q: "Who is covering Dr. Smith's vacation next week?",
+        a: `<strong>Coverage Plan — Dr. Smith's Vacation</strong><br><br>Dr. C. Adeyemi and Dr. P. Ibrahim are absorbing Dr. Smith's Day shifts next week, adding roughly 12 hours each to their weekly total.<br><br>Neither exceeds 60 hours for the week with this coverage in place.`
+      },
+      {
+        q: "Which residents are scheduled for consecutive weekend assignments?",
+        a: `<strong>Consecutive Weekend Assignments</strong><br><br>Dr. T. Alvarez and Dr. L. Petrova are each scheduled for back-to-back weekend Call/Night shifts this rotation block.<br><br>Recommended: Insert a recovery weekend before their next assignment block.`
+      }
+    ]
+  },
+  {
+    id: "schedule-adjustments",
+    title: "Schedule Adjustments",
+    questions: [
+      {
+        q: "If Resident A calls in sick tonight, who is the best replacement?",
+        a: `<strong>Best Replacement — Tonight</strong><br><br>Dr. C. Adeyemi is the best fit: currently at 48h this week, nothing scheduled tonight, and no duty-hour conflict from picking up a single Night shift.<br><br>Backup option: Dr. H. Suzuki, also under 60h for the week.`
+      },
+      {
+        q: "Generate a revised schedule that accommodates three residents attending a conference.",
+        a: `<strong>Revised Schedule — Conference Coverage</strong><br><br>Removing Dr. Reyes, Dr. Larsen, and Dr. Osei for the conference window requires redistributing 6 shifts. The revised draft keeps every remaining resident under 65h for the week by spreading coverage across 5 colleagues rather than 2.<br><br>✓ No duty-hour violations introduced.`
+      },
+      {
+        q: "How can I redistribute shifts to maintain coverage while minimizing overtime?",
+        a: `<strong>Overtime-Minimizing Redistribution</strong><br><br>Shifting 2 Night shifts from Dr. Alvarez (currently 84h) to Dr. Kowalski and Dr. Dubois (currently 48h each) maintains full coverage while cutting projected overtime by roughly 18 hours this week.<br><br>Recommended: Apply via the Scheduling tab's balance-workload action.`
+      },
+      {
+        q: "Which residents can swap shifts without violating duty hour rules?",
+        a: `<strong>Eligible Shift Swaps</strong><br><br>Dr. Adeyemi ↔ Dr. Ibrahim and Dr. Suzuki ↔ Dr. Dubois can swap any single shift this week without breaching the 80-hour rule or minimum rest requirements.<br><br>Dr. Alvarez is not eligible to take on additional shifts until their weekly total drops below 72h.`
+      }
+    ]
+  },
+  {
+    id: "individual-workload",
+    title: "Individual Resident Workload",
+    questions: [
+      {
+        q: "How many hours has Resident A worked this week?",
+        a: `<strong>Weekly Hours — Individual Lookup</strong><br><br>Hours range from 24h (lightest, top-performing residents) to 84h (Dr. T. Alvarez, this week's highest) across the 15-resident roster.<br><br>Open the Scheduling tab and select a resident's row for their exact weekly total.`
+      },
+      {
+        q: "Which residents are approaching the 80-hour duty limit?",
+        a: `<strong>Approaching the 80-Hour Limit</strong><br><br>Dr. T. Alvarez is currently at <strong>84h</strong> this week — already over the ACGME weekly average threshold if sustained.<br>Dr. L. Petrova and Dr. J. Okafor are both at <strong>72h</strong>, within range but trending upward.<br><br>⚠ Recommend a schedule review for all three before next week's rotation.`
+      },
+      {
+        q: "How many overnight calls has each PGY-2 completed this month?",
+        a: `<strong>PGY-2 Overnight Call Volume — This Month</strong><br><br>PGY-2s are averaging 5.4 overnight calls this month, roughly 30% above the program-wide PGY average of 4.2.<br><br>Dr. Okafor and Dr. Petrova account for the highest individual counts.`
+      },
+      {
+        q: "Compare workload among all senior residents.",
+        a: `<strong>Senior Resident Workload Comparison</strong><br><br>Senior (PGY-3+) residents average 56h/week, ranging from 36h (Dr. Nakamura) to 84h (Dr. Alvarez) — a 48-hour spread.<br><br>That's the widest spread of any PGY cohort, suggesting uneven senior-level shift distribution.`
+      },
+      {
+        q: "Which resident has had the fewest days off in the last six weeks?",
+        a: `<strong>Fewest Days Off — Last 6 Weeks</strong><br><br>Dr. T. Alvarez has had the fewest full days off, averaging just under 1 per week versus a program target of 1.5.<br><br>Dr. Petrova and Dr. Okafor follow closely behind.`
+      }
+    ]
+  },
+  {
+    id: "resident-burnout-risk",
+    title: "Resident Burnout Risk Assessment",
+    questions: [
+      {
+        q: "Identify residents at high risk for fatigue based on recent schedules.",
+        a: `<strong>High Fatigue-Risk Residents</strong><br><br>Dr. T. Alvarez, Dr. L. Petrova, and Dr. J. Okafor are flagged High fatigue risk — each carrying 72–84h this week with multiple Night/Call shifts and minimal recovery time between them.<br><br>These three match the "most burnt-out" cohort already surfaced on the Scheduling tab.`
+      },
+      {
+        q: "Which residents have worked more than four overnight shifts in the last two weeks?",
+        a: `<strong>4+ Overnight Shifts — Last 2 Weeks</strong><br><br>Dr. Okafor (5), Dr. Alvarez (5), and Dr. Petrova (4) exceed the threshold.<br><br>No other resident in the current roster crosses 4 overnight shifts in the trailing two-week window.`
+      },
+      {
+        q: "Show residents with the highest workload variance this quarter.",
+        a: `<strong>Highest Workload Variance — This Quarter</strong><br><br>Dr. Alvarez shows the largest week-to-week swing (as low as 48h, as high as 84h), followed by Dr. Petrova and Dr. Okafor.<br><br>High variance is itself a burnout signal — sudden spikes are harder to recover from than a consistently higher baseline.`
+      },
+      {
+        q: "What percentage of residents are exceeding wellness risk thresholds?",
+        a: `<strong>Residents Exceeding Wellness Risk Thresholds</strong><br><br><strong>20%</strong> of the 15-resident roster (3 residents) currently exceed the program's wellness risk threshold, matching the "burnt-out" tier on the Scheduling tab.<br><br>All 3 are concentrated in Emergency Medicine, Surgery, and Internal Medicine.`
+      },
+      {
+        q: "Who has had the longest continuous stretch of clinical days?",
+        a: `<strong>Longest Continuous Clinical Stretch</strong><br><br>Dr. T. Alvarez has the longest current stretch — 6 consecutive clinical days without a full day off.<br><br>Program guideline recommends intervention at 6+ consecutive days; this resident is at that threshold now.`
+      }
+    ]
+  },
+  {
+    id: "schedule-equity",
+    title: "Schedule Equity",
+    questions: [
+      {
+        q: "Are night shifts distributed equally across residents?",
+        a: `<strong>Night Shift Distribution</strong><br><br>No — night shifts are concentrated in 3 of 15 residents (Okafor, Petrova, Alvarez), who together carry roughly 45% of all Night/Call shifts program-wide despite being 20% of the roster.<br><br>Recommended: Redistribute 1–2 night shifts per week from this group to the 9 standard-tier residents.`
+      },
+      {
+        q: "Which residents have carried the highest call burden this year?",
+        a: `<strong>Highest Call Burden — Year to Date</strong><br><br>Dr. L. Petrova and Dr. T. Alvarez lead year-to-date call volume, each roughly 35% above the program average.<br><br>Dr. J. Okafor is close behind in third place.`
+      },
+      {
+        q: "Compare weekend coverage assignments by resident and PGY level.",
+        a: `<strong>Weekend Coverage by PGY Level</strong><br><br>PGY-2s carry the heaviest weekend load (2.1 weekend shifts/month average), compared to 1.4 for PGY-1s and 1.6 for PGY-3+.<br><br>Within PGY-2, Dr. Okafor and Dr. Alvarez sit above their own cohort's average.`
+      },
+      {
+        q: "Are moonlighting opportunities being distributed fairly?",
+        a: `<strong>Moonlighting Distribution</strong><br><br>Moonlighting slots currently skew toward the 3 top-performing residents (Whitfield, Mensah, Nakamura), who have the most duty-hour headroom to take them.<br><br>Expected given their lighter base schedules, but worth confirming access isn't informally restricted for others.`
+      },
+      {
+        q: "Identify scheduling inequities across resident cohorts.",
+        a: `<strong>Scheduling Inequities Across Cohorts</strong><br><br>The clearest inequity: 3 residents (Emergency Medicine, Surgery, Internal Medicine) carry 72–84h weeks while 3 others carry 24h weeks — a 60-hour spread within the same 15-person roster.<br><br>Standardizing toward the "balanced workload" pattern on the Scheduling tab would close most of this gap.`
+      }
+    ]
+  },
+  {
+    id: "rotation-equity",
+    title: "Rotation Equity",
+    questions: [
+      {
+        q: "Which residents have received fewer elective opportunities?",
+        a: `<strong>Fewer Elective Opportunities</strong><br><br>Dr. Okafor, Dr. Petrova, and Dr. Alvarez have had the fewest elective slots this year — a direct consequence of their heavier core-service load leaving less rotation flexibility.<br><br>Reducing their service burden would likely free up elective capacity.`
+      },
+      {
+        q: "Compare ICU and inpatient service exposure across residents.",
+        a: `<strong>ICU vs. Inpatient Exposure</strong><br><br>ICU exposure is concentrated in Internal Medicine and Surgery residents (Alvarez, Petrova, Suzuki, Dubois), while inpatient service exposure is more evenly spread across the full roster.<br><br>No resident is currently below the minimum required ICU weeks for their PGY level.`
+      },
+      {
+        q: "Are procedural opportunities distributed evenly among residents?",
+        a: `<strong>Procedural Opportunity Distribution</strong><br><br>Not evenly — Surgery and Emergency Medicine residents (Suzuki, Kowalski, Okafor) log roughly 2.5x the procedural volume of Psychiatry or Family Medicine residents. Expected by specialty, but worth tracking against each resident's own graduation requirements.`
+      }
+    ]
+  },
+  {
+    id: "duty-hour-compliance",
+    title: "Duty Hour Compliance (ACGME)",
+    questions: [
+      {
+        q: "Which residents are currently at risk of duty hour violations?",
+        a: `<strong>Duty Hour Violation Risk</strong><br><br>Dr. T. Alvarez (84h this week) is the immediate concern — one more heavy week would push their 4-week rolling average over the 80-hour ACGME limit.<br><br>Dr. Petrova and Dr. Okafor (72h each) are trending the same direction.`
+      },
+      {
+        q: "Show all actual or potential ACGME violations from the past month.",
+        a: `<strong>ACGME Violations — Past Month</strong><br><br>No confirmed violations. 1 potential violation was flagged and resolved: Dr. Alvarez's 4-week average briefly touched 79.5h before a schedule adjustment brought it back under threshold.<br><br>Recommend continued monitoring for this resident.`
+      },
+      {
+        q: "How many 24+ hour shifts occurred last quarter?",
+        a: `<strong>24+ Hour Shifts — Last Quarter</strong><br><br>14 24-hour Call shifts occurred across the roster last quarter, concentrated in Surgery and Internal Medicine.<br><br>Dr. Petrova and Dr. Alvarez each accounted for roughly a quarter of the total.`
+      },
+      {
+        q: "Which rotations generate the most duty hour exceptions?",
+        a: `<strong>Rotations Generating the Most Exceptions</strong><br><br>Surgery and Internal Medicine generate the most duty-hour exceptions, together accounting for over half of all flagged instances this year.<br><br>Emergency Medicine is third, driven mainly by night-shift clustering rather than raw hour totals.`
+      },
+      {
+        q: "Predict residents likely to exceed duty hour limits next month.",
+        a: `<strong>Predicted Duty Hour Risk — Next Month</strong><br><br>Based on current trajectory, Dr. Alvarez has a <strong>78%</strong> likelihood of exceeding the 80-hour rolling average next month absent intervention. Dr. Petrova and Dr. Okafor are each estimated at roughly 40%.<br><br>Recommended: Apply the "retain most burnt-out residents" optimization on the Scheduling tab now, before the risk materializes.`
+      }
+    ]
+  },
+  {
+    id: "accreditation-readiness",
+    title: "Accreditation Readiness",
+    questions: [
+      {
+        q: "Generate a report of workload metrics for the Clinical Competency Committee.",
+        a: `<strong>CCC Workload Report — Summary</strong><br><br>Program-wide average: 52h/week. Range: 24h–84h. 3 residents (20%) currently exceed the program's internal wellness threshold.<br><br>Full per-resident detail is exportable from the Scheduling tab for the committee packet.`
+      },
+      {
+        q: "Summarize duty hour compliance trends for our Annual Program Evaluation.",
+        a: `<strong>Duty Hour Compliance — APE Summary</strong><br><br>Zero confirmed ACGME violations this cycle; 1 near-miss identified and corrected proactively. Compliance trend is stable, with a slight uptick in near-misses tied to a temporary Surgery staffing shortage.<br><br>Recommend citing the proactive correction as evidence of effective monitoring.`
+      },
+      {
+        q: "Which services contribute most to compliance concerns?",
+        a: `<strong>Services Contributing Most to Compliance Concerns</strong><br><br>Surgery and Internal Medicine together account for roughly 65% of all duty-hour near-misses this year, driven by 24-hour call frequency rather than total rotation length.`
+      }
+    ]
+  },
+  {
+    id: "coverage-forecasting",
+    title: "Coverage Forecasting",
+    questions: [
+      {
+        q: "Do we have sufficient resident coverage during the upcoming holiday schedule?",
+        a: `<strong>Holiday Coverage Forecast</strong><br><br>Projected coverage is adequate but thin: 2 fewer residents than a typical week are available due to approved time off, concentrated on the two holiday weekends.<br><br>Recommend confirming backup coverage for those two weekends now rather than closer to the date.`
+      },
+      {
+        q: "What is the projected staffing gap during graduation season?",
+        a: `<strong>Graduation Season Staffing Gap</strong><br><br>Projected gap: roughly 3 resident-weeks of coverage in the two-week transition window between outgoing PGY-3s graduating and incoming PGY-1s onboarding.<br><br>Bridging typically relies on moonlighting and senior resident overtime — plan for a temporary hours increase in that window.`
+      },
+      {
+        q: "How will maternity leave affect service coverage next quarter?",
+        a: `<strong>Maternity Leave Coverage Impact — Next Quarter</strong><br><br>One resident's upcoming leave removes roughly 48h/week of capacity for 12 weeks. Absorbing this without violating duty-hour limits requires redistributing across at least 4 other residents rather than 1–2.<br><br>Recommend starting the redistribution plan 3–4 weeks before the leave begins.`
+      },
+      {
+        q: "Forecast coverage needs based on historical patient census.",
+        a: `<strong>Coverage Forecast — Historical Census Basis</strong><br><br>Based on historical patterns, patient census typically rises 12–15% in Q1, which would require roughly 1 additional resident-equivalent of coverage during that window if current staffing holds flat.`
+      }
+    ]
+  },
+  {
+    id: "service-demand-matching",
+    title: "Service Demand Matching",
+    questions: [
+      {
+        q: "Are resident staffing levels aligned with patient volumes?",
+        a: `<strong>Staffing-to-Volume Alignment</strong><br><br>Broadly aligned, with one exception: Emergency Medicine patient volume has grown faster than EM resident staffing over the past two quarters, contributing to the elevated hours seen for Dr. Okafor and Dr. Kowalski.`
+      },
+      {
+        q: "Which rotations are understaffed relative to workload?",
+        a: `<strong>Understaffed Rotations</strong><br><br>Emergency Medicine and Surgery show the clearest staffing-to-workload mismatch, each running roughly 15–20% above the resident hours their current census would predict under a balanced model.`
+      },
+      {
+        q: "How should we adjust scheduling if ER volume increases by 20%?",
+        a: `<strong>Scheduling Adjustment — +20% ER Volume Scenario</strong><br><br>A 20% ER volume increase would require roughly 1.5 additional resident-equivalents of EM coverage to hold current hours flat. Without that addition, projected EM resident hours would rise from the current ~50h average toward 60h+.<br><br>Recommended: Model this scenario on the Scenario Simulator before committing to a coverage plan.`
+      }
+    ]
+  },
+  {
+    id: "education-service-balance",
+    title: "Education vs. Service Balance",
+    questions: [
+      {
+        q: "Which residents are spending excessive time on service compared with educational activities?",
+        a: `<strong>Service-Heavy, Education-Light Residents</strong><br><br>Dr. Alvarez, Dr. Petrova, and Dr. Okafor show the lowest ratio of educational to service time this quarter — largely a byproduct of their heavier clinical hours leaving less room for didactics.`
+      },
+      {
+        q: "How many clinic sessions has each resident completed this quarter?",
+        a: `<strong>Clinic Sessions Completed — This Quarter</strong><br><br>Program average is 8 sessions/resident this quarter. The 3 highest-hour residents (Alvarez, Petrova, Okafor) are each running 2–3 sessions behind that average.`
+      },
+      {
+        q: "Are procedural opportunities meeting graduation requirements?",
+        a: `<strong>Procedural Requirements vs. Current Pace</strong><br><br>13 of 15 residents are on pace to meet procedural graduation requirements. 2 residents in lower-procedure-volume specialties are trending slightly behind and should be flagged for a targeted opportunity in the next rotation block.`
+      },
+      {
+        q: "Which residents may be falling behind on training milestones due to workload?",
+        a: `<strong>Training Milestones at Risk from Workload</strong><br><br>Dr. Alvarez is the primary concern — sustained 70–84h weeks are displacing the didactic and procedural time needed to stay on pace for their current milestone set.<br><br>Recommended: Address the workload issue first; the milestone gap is a downstream effect, not the root cause.`
+      }
+    ]
+  },
+  {
+    id: "learning-opportunities",
+    title: "Learning Opportunities",
+    questions: [
+      {
+        q: "Identify residents needing additional ICU exposure.",
+        a: `<strong>Residents Needing More ICU Exposure</strong><br><br>3 residents in lower-acuity specialties (Family Medicine, Psychiatry) are below the program's recommended ICU exposure benchmark for their PGY level and would benefit from an added ICU block.`
+      },
+      {
+        q: "Which residents require more continuity clinic sessions?",
+        a: `<strong>Residents Needing More Continuity Clinic</strong><br><br>Dr. Alvarez and Dr. Petrova are furthest behind on continuity clinic session targets this year, again tracing back to their heavier inpatient/call load leaving less outpatient time.`
+      },
+      {
+        q: "Who needs additional procedural experience before graduation?",
+        a: `<strong>Additional Procedural Experience Needed</strong><br><br>2 residents in their final year are trending slightly below their procedural graduation targets. Both are in specialties where procedure volume depends heavily on rotation assignment — prioritizing them for high-volume blocks in the coming months should close the gap.`
+      }
+    ]
+  },
+  {
+    id: "resident-wellness-monitoring",
+    title: "Resident Wellness Monitoring",
+    questions: [
+      {
+        q: "Which residents show signs of workload-related burnout?",
+        a: `<strong>Signs of Workload-Related Burnout</strong><br><br>Dr. T. Alvarez, Dr. L. Petrova, and Dr. J. Okafor show the clearest signs — elevated hours, high night/call frequency, and reduced days off, consistent with the "most burnt-out" cohort already flagged on the Scheduling tab.`
+      },
+      {
+        q: "Correlate schedule intensity with wellbeing survey responses.",
+        a: `<strong>Schedule Intensity vs. Wellbeing Survey Scores</strong><br><br>Residents averaging 65h+/week score roughly 30% lower on the wellbeing survey's exhaustion subscale than those under 50h/week. The correlation is strongest for night/call frequency specifically, more than raw weekly hours.`
+      },
+      {
+        q: "How many residents have had fewer than two full weekends off this month?",
+        a: `<strong>Fewer Than 2 Full Weekends Off — This Month</strong><br><br><strong>4 residents</strong> have had fewer than two full weekends off this month, led by Dr. Alvarez and Dr. Petrova, who have each had just one.`
+      },
+      {
+        q: "Identify residents with increasing fatigue risk trends.",
+        a: `<strong>Increasing Fatigue Risk Trends</strong><br><br>Dr. Alvarez's fatigue risk trend is rising fastest — up over the last 3 rotation blocks, driven by consecutive Call/Night assignments. Dr. Petrova shows a similar but slower upward trend.`
+      }
+    ]
+  },
+  {
+    id: "resident-retention-signals",
+    title: "Resident Retention Signals",
+    questions: [
+      {
+        q: "Which scheduling patterns correlate with resident dissatisfaction?",
+        a: `<strong>Scheduling Patterns Linked to Dissatisfaction</strong><br><br>Consecutive Call shifts with no recovery day between them show the strongest correlation with lower satisfaction scores — stronger than total weekly hours alone.`
+      },
+      {
+        q: "Are certain rotations associated with increased wellness concerns?",
+        a: `<strong>Rotations Associated with Wellness Concerns</strong><br><br>Emergency Medicine, Surgery, and Internal Medicine — the same three services carrying this year's heaviest call burden — show the highest wellness-concern flag rates.`
+      },
+      {
+        q: "Which residents may benefit from schedule modifications?",
+        a: `<strong>Residents Who May Benefit from Schedule Modifications</strong><br><br>Dr. Alvarez, Dr. Petrova, and Dr. Okafor are the top candidates — each is already eligible for the "retain most burnt-out residents" optimized schedule on the Scheduling tab, which would cut their hours roughly in half.`
+      }
+    ]
+  },
+  {
+    id: "executive-program-director",
+    title: "Executive Program Director Briefing",
+    questions: [
+      {
+        q: "What is the overall workload burden score for the residency program this month?",
+        a: `<strong>Program-Wide Workload Burden Score</strong><br><br><strong>68 / 100</strong> this month (higher = heavier burden), up from 61 last month — driven primarily by the Emergency Medicine, Surgery, and Internal Medicine cohorts.`
+      },
+      {
+        q: "Which residents are at highest risk of burnout in the next 30 days?",
+        a: `<strong>Highest 30-Day Burnout Risk</strong><br><br>Dr. T. Alvarez (highest), Dr. L. Petrova, and Dr. J. Okafor — all three already carrying 72–84h weeks with limited recovery time built into the next rotation block.`
+      },
+      {
+        q: "What scheduling changes would reduce burnout risk while maintaining coverage?",
+        a: `<strong>Recommended Scheduling Changes</strong><br><br>Redistributing 3–4 Night/Call shifts per week from the top 3 highest-hour residents to the 9 standard-tier residents would cut peak individual hours from 84h to roughly 48h without reducing total coverage.<br><br>This is exactly what the Scheduling tab's "balance workload" optimization already models.`
+      },
+      {
+        q: "Which rotations contribute disproportionately to resident distress?",
+        a: `<strong>Rotations Contributing Most to Distress</strong><br><br>Emergency Medicine, Surgery, and Internal Medicine — together responsible for the majority of flagged burnout and wellness-concern signals despite being 3 of 9 represented specialties.`
+      },
+      {
+        q: "How does resident workload compare across specialties?",
+        a: `<strong>Workload Comparison Across Specialties</strong><br><br>Surgery and Internal Medicine residents average 15–20% more weekly hours than the program median; Psychiatry and Family Medicine residents run closest to the lightest end of the range.`
+      },
+      {
+        q: "What is the relationship between workload, wellness scores, and educational performance?",
+        a: `<strong>Workload, Wellness &amp; Educational Performance</strong><br><br>Residents above 65h/week show both lower wellbeing scores and a lower ratio of educational-to-service time — the two effects move together, suggesting workload is the common upstream driver of both.`
+      },
+      {
+        q: "Predict duty hour violations, burnout events, and staffing shortages over the next quarter.",
+        a: `<strong>Next-Quarter Predictive Outlook</strong><br><br><strong>Duty hour risk:</strong> 1 resident (Alvarez) likely to approach the 80-hour threshold absent intervention.<br><strong>Burnout risk:</strong> 3 residents trending upward.<br><strong>Staffing:</strong> a 3-resident-week gap projected during the graduation-season transition.<br><br>All three risks concentrate in the same three services — addressing Emergency Medicine, Surgery, and Internal Medicine coverage first would move all three numbers at once.`
+      },
+      {
+        q: "Generate a heat map of workload intensity across all residents and services.",
+        a: `<strong>Workload Intensity Heat Map</strong><br><br>Highest intensity: Emergency Medicine, Surgery, Internal Medicine (Red). Moderate: Anesthesiology, OB/GYN, Radiology (Orange). Lowest: Family Medicine, Pediatrics, Psychiatry (Green).<br><br>This mirrors the tier structure already used on the Scheduling tab (top / standard / burnt-out).`
+      },
+      {
+        q: "Recommend schedule optimizations to improve wellness without reducing coverage.",
+        a: `<strong>Recommended Optimizations</strong><br><br>1. Apply the "balance workload evenly" schedule to redistribute hours from the 3 highest-burden residents.<br>2. Insert a mandatory recovery day after any 24h Call shift.<br>3. Cap consecutive Night shifts at 2 before requiring a Day or Off day.<br><br>Modeled together, these changes are projected to cut peak individual hours by roughly 40% with zero net change in total coverage.`
+      },
+      {
+        q: "Which residents are projected to enter the \"high burnout risk\" category within the next 14 days based on shift intensity, circadian disruption, patient load, and recent workload patterns?",
+        a: `<strong>14-Day Burnout Risk Projection</strong><br><br>Based on shift intensity, circadian disruption, and recent workload trend, <strong>Dr. T. Alvarez</strong> is projected to enter the high-burnout-risk category within 14 days at current pace (confidence: 81%). Dr. L. Petrova is the second-most-likely case (confidence: 54%).<br><br>Recommended: Intervene now — apply the burnt-out-resident optimization on the Scheduling tab before either resident crosses the threshold.`
+      }
+    ]
   }
 ];
 

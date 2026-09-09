@@ -6,6 +6,16 @@
     <title>emPower Workforce Sustainability Dashboard</title>
     <link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
+    <!-- Poppins: the real emPower Director dashboard's typeface -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- ECharts: powers the Director dashboard's gauge/bar/line/tree-map charts,
+         matching the real product's chart engine for those visual types. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js"></script>
   </head>
   <body>
     <div class="login-screen" id="loginScreen">
@@ -49,9 +59,7 @@
         <button class="nav-item" type="button" data-view="v-patient"><i data-icon="bed"></i>Patient Impact</button>
         <button class="nav-item" type="button" data-view="v-finance"><i data-icon="circle-dollar-sign"></i>Financial Impact</button>
         <button class="nav-item" type="button" data-view="v-interventions"><i data-icon="clipboard-check"></i>Interventions</button>
-        <button class="nav-item" type="button" data-view="v-scheduling"><i data-icon="calendar"></i>Scheduling</button>
         <button class="nav-item" type="button" data-view="v-roi"><i data-icon="circle-dollar-sign"></i>ROI Comparison</button>
-        <button class="nav-item" type="button" data-view="v-scenario"><i data-icon="chart-column"></i>Scenario Simulator</button>
       </nav>
 
       <section class="source">
@@ -293,39 +301,6 @@
 
       <div id="view-host"></div>
 
-      <div class="view" id="v-scheduling">
-        <section class="page-grid cols-1">
-          <article class="card sched-card">
-            <div class="head">
-              <div>
-                <h2>Weekly Resident Schedules</h2>
-                <p>Current Rotation — 15 Residents</p>
-              </div>
-            </div>
-            <div id="schedCurrent"></div>
-          </article>
-
-          <article class="card sched-card">
-            <div class="head">
-              <div>
-                <h2>AI Schedule Optimization</h2>
-                <p>Choose a retention goal — the Wellness Officer will generate an optimized schedule below</p>
-              </div>
-            </div>
-            <div class="sched-options" id="schedOptions">
-              <button type="button" class="sched-option-btn" data-sched-action="top">I want to retain my top 3 best residents</button>
-              <button type="button" class="sched-option-btn" data-sched-action="burnt">I want to retain my most burnt-out residents</button>
-              <button type="button" class="sched-option-btn" data-sched-action="balance">I want to balance workload evenly across all residents</button>
-            </div>
-            <div class="sched-working" id="schedWorking">
-              <span class="chat-dots"><span>.</span><span>.</span><span>.</span></span>&nbsp;Wellness Officer is working
-            </div>
-          </article>
-
-          <div id="schedResults"></div>
-        </section>
-      </div>
-
       <div class="view" id="v-roi">
         <section class="page-grid cols-2">
           <article class="card">
@@ -348,28 +323,6 @@
             <table id="roiTable"></table>
             <p class="roi-note" id="roiNote"></p>
           </article>
-        </section>
-      </div>
-
-      <div class="view" id="v-scenario">
-        <section class="page-grid cols-1">
-          <article class="card sched-card">
-            <div class="head">
-              <div>
-                <h2>"What If" Scenario Simulator</h2>
-                <p>Model a staffing or policy change before committing to it</p>
-              </div>
-            </div>
-            <div class="sched-options" id="scenarioOptions">
-              <button type="button" class="sched-option-btn" data-scenario-action="apps">What if we hire 2 APPs for the Emergency Department?</button>
-              <button type="button" class="sched-option-btn" data-scenario-action="call">What if we eliminate 24-hour call shifts?</button>
-            </div>
-            <div class="sched-working" id="scenarioWorking">
-              <span class="chat-dots"><span>.</span><span>.</span><span>.</span></span>&nbsp;Modeling scenario
-            </div>
-          </article>
-
-          <div id="scenarioResults"></div>
         </section>
       </div>
 
@@ -407,6 +360,197 @@
         </button>
       </div>
     </div>
+    </div>
+
+    <!-- =====================================================================
+         Director dashboard — a structural rebuild (not a reskin) matching the
+         real emPower "Program Director" experience: Dashboard (Overview /
+         Wellness Score / Burnout / Sleep tabs, PGY + month filters) plus
+         Program / Questionnaires / Assessments / Settings in the sidebar.
+         Kept as an entirely separate shell from #appRoot (own namespaced
+         "d-" classes, own CSS variables) rather than reusing CEO's classes,
+         since the two are visually unrelated design systems sharing one page.
+         ===================================================================== -->
+    <div class="d-root" id="directorRoot">
+      <aside class="d-side" id="dSide">
+        <div class="d-side-inner">
+          <div class="d-brand">
+            <svg class="d-brand-mark" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M7.99501 9.99558L5.49973 12.4909L13.0089 20L15.5042 17.5047L7.99501 9.99558Z" fill="currentColor"/>
+              <path d="M12.9998 5.0047L8.00337 0.00824549L0.492188 7.51118L2.99042 10.0094L8.00337 5.0047L18.0045 15.0059L20.5028 12.5076L15.4898 7.50293L17.9963 4.99646L23.0092 10.0012L25.5075 7.50293L17.9963 0L12.9998 5.0047Z" fill="currentColor"/>
+            </svg>
+            <div class="d-brand-word" id="dBrandWord">
+              <svg viewBox="0 0 334 50" fill="none" xmlns="http://www.w3.org/2000/svg" width="118" aria-hidden="true">
+                <path d="M167.385 11.458C156.522 11.458 147.742 20.089 147.742 30.7289C147.742 41.3688 156.522 49.9998 167.385 49.9998C178.248 49.9998 187.028 41.3688 187.028 30.7289C187.028 20.089 178.248 11.458 167.385 11.458ZM167.385 44.9403C159.647 44.9403 153.397 38.5414 153.397 30.7289C153.397 22.9164 159.647 16.5176 167.385 16.5176C175.123 16.5176 181.373 22.9164 181.373 30.7289C181.373 38.5414 175.123 44.9403 167.385 44.9403Z" fill="currentColor"/>
+                <path d="M39.9292 32.5146C39.9292 31.9194 40.0036 31.3241 40.0036 30.7289C40.0036 20.089 31.2238 11.458 20.3607 11.458C9.49757 11.458 0.717773 20.089 0.717773 30.7289C0.717773 41.3688 9.49757 49.9998 20.3607 49.9998C31.2238 49.9998 35.4649 45.1635 38.4411 38.2438H32.2655C29.8101 42.2617 25.4202 44.9403 20.3607 44.9403C13.2178 44.9403 7.33982 39.5087 6.44696 32.5146H39.8548H39.9292ZM20.3607 16.5176C26.9083 16.5176 32.3399 21.0563 33.9024 27.1575H6.74458C8.30709 21.0563 13.8131 16.5176 20.2863 16.5176H20.3607Z" fill="currentColor"/>
+                <path d="M283.754 32.5146C283.754 31.9194 283.829 31.3241 283.829 30.7289C283.829 20.089 275.049 11.458 264.186 11.458C253.323 11.458 244.543 20.089 244.543 30.7289C244.543 41.3688 253.323 49.9998 264.186 49.9998C275.049 49.9998 279.29 45.1635 282.266 38.2438H276.09C273.635 42.2617 269.245 44.9403 264.186 44.9403C257.043 44.9403 251.165 39.5087 250.272 32.5146H283.68H283.754ZM264.26 16.5176C270.808 16.5176 276.239 21.0563 277.802 27.1575H250.644C252.206 21.0563 257.712 16.5176 264.186 16.5176H264.26Z" fill="currentColor"/>
+                <path d="M86.8046 11.3848C81.5218 11.3848 76.9087 13.7657 74.1557 17.3372C71.4027 13.7657 66.7896 11.4592 61.5069 11.4592C53.0247 11.4592 46.1794 17.5604 46.1794 25.0009V49.1081H51.5366V25.0009C51.5366 20.4622 56.0009 16.8163 61.5069 16.8163C67.0128 16.8163 71.4771 20.4622 71.4771 25.0009V49.1081H76.8343V25.0009C76.8343 20.4622 81.2986 16.8163 86.8046 16.8163C92.3106 16.8163 96.7748 20.4622 96.7748 25.0009V49.1081H102.132V25.0009C102.132 17.486 95.2868 11.4592 86.8046 11.4592V11.3848Z" fill="currentColor"/>
+                <path d="M130.257 0H110.242V49.0329H115.599V29.4644H130.257C138.367 29.4644 144.989 22.8423 144.989 14.7322C144.989 6.62205 138.367 0 130.257 0ZM130.257 24.1072H115.599V5.35716H130.257C135.465 5.35716 139.632 9.59825 139.632 14.7322C139.632 19.8661 135.391 24.1072 130.257 24.1072Z" fill="currentColor"/>
+                <path d="M237.623 12.2764L228.099 38.1693L218.501 16.5175L216.567 12.2764H215.004L213.144 16.5175L203.546 38.1693L194.022 12.2764H188.665L200.57 44.7914L202.281 49.3301H203.918L205.927 44.7914L215.823 22.5443L225.644 44.7914L227.727 49.3301H229.364L231.001 44.7914L242.98 12.2764H237.623Z" fill="currentColor"/>
+                <path d="M305.258 11.3848C296.775 11.3848 289.93 17.486 289.93 24.9265V49.0337H295.287V24.9265C295.287 20.3878 299.752 16.7419 305.258 16.7419H306.15V11.3848H305.258Z" fill="currentColor"/>
+                <path d="M333.532 28.2738H323.264V18.0059H318.353V28.2738H308.16V33.1845H318.353V43.4524H323.264V33.1845H333.532V28.2738Z" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
+
+          <nav class="d-nav" aria-label="Director navigation">
+            <button class="d-nav-item active" type="button" data-dview="d-dashboard"><i data-icon="layout-grid"></i><span class="d-nav-label">Dashboard</span></button>
+            <button class="d-nav-item" type="button" data-dview="d-program"><i data-icon="building-2"></i><span class="d-nav-label">Program</span></button>
+            <button class="d-nav-item" type="button" data-dview="d-questionnaires"><i data-icon="book-open-check"></i><span class="d-nav-label">Questionnaires</span></button>
+            <button class="d-nav-item" type="button" data-dview="d-assessments"><i data-icon="list-checks"></i><span class="d-nav-label">Assessments</span></button>
+            <button class="d-nav-item" type="button" data-dview="d-settings"><i data-icon="settings"></i><span class="d-nav-label">Settings</span></button>
+          </nav>
+
+          <div class="d-footer">
+            <div class="d-user-wrap">
+              <button class="d-user" type="button" id="dUserMenuBtn" aria-haspopup="true" aria-expanded="false">
+                <span class="d-avatar">ME</span>
+                <span class="d-user-info" id="dUserInfo">
+                  <span class="d-user-name">Morgan Ellis</span>
+                  <span class="d-user-role">Program Director</span>
+                </span>
+              </button>
+              <div class="d-user-menu" id="dUserMenu" role="menu">
+                <button type="button" class="d-user-menu-item" id="dLogoutBtn"><i data-icon="log-out"></i><span>Log Out</span></button>
+              </div>
+            </div>
+            <hr class="d-hr" />
+            <div class="d-powered">
+              <svg class="d-powered-mark" width="18" height="16" viewBox="0 0 46 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M31.3894 4.78807C31.4907 4.79672 31.5183 4.65843 31.4263 4.6325C29.5479 4.03613 23.1486 2.5841 17.3938 8.00328C11.9153 13.1545 14.475 17.018 14.475 19.559C14.475 21.1926 13.5174 23.4138 12.8361 24.7881C12.5598 25.3412 13.0755 25.9549 13.7108 25.8339C14.3277 25.7215 14.9907 25.5659 15.4326 25.3585C15.5799 25.2893 15.7457 25.4017 15.7273 25.5573C15.6904 25.903 15.5431 26.4475 15.0919 27.0439C14.8341 27.3896 15.0275 27.865 15.4694 27.96C15.7365 28.0205 16.0219 28.0724 16.2889 28.1156C16.5836 28.1675 16.7217 28.4873 16.5375 28.712C16.4086 28.8676 16.2705 29.0404 16.1324 29.2046C15.9022 29.4812 16.1232 29.8874 16.5007 29.8788C16.7217 29.8702 16.9611 29.8788 17.1821 29.8961C17.3754 29.9134 17.5227 30.0776 17.5043 30.2591C17.4399 31.0543 17.3662 33.2323 18.4435 33.5607C20.5613 34.2003 22.8263 29.4812 25.1467 30.795C27.1539 31.9358 23.8484 35.056 22.946 35.8598C22.8816 35.9116 22.9368 36.0154 23.0197 35.9981C24.4008 35.7301 30.1648 34.3645 30.1648 30.164C30.1648 25.4449 27.4946 25.9808 26.9974 23.0162C26.9882 22.973 27.025 22.9298 27.0618 22.9212C27.8537 22.7742 34.1425 21.3913 33.1297 13.5608C33.1205 13.5003 33.0376 13.4657 32.9916 13.5089C32.6417 13.7855 31.5644 14.572 30.2845 14.9696C28.7376 15.4449 23.9036 16.0932 24.6126 21.8148C24.6218 21.8926 24.7323 21.9099 24.7691 21.8494C25.2295 21.0715 26.9421 18.4354 29.1796 17.7267C29.2717 17.7008 29.3361 17.8131 29.2533 17.865C28.2312 18.5391 25.7267 20.4406 25.1927 23.2323C25.1835 23.2755 25.1375 23.3101 25.0914 23.2928C24.6034 23.1977 22.1266 22.7656 20.2298 23.5953C20.1469 23.6299 20.1745 23.7509 20.2666 23.7509C21.1782 23.7077 23.388 23.6817 24.5482 24.4078C24.5942 24.4337 24.5942 24.4942 24.5574 24.5288C23.9773 25.0646 19.9904 28.47 16.3258 23.3879C16.2889 23.336 16.3258 23.2669 16.3994 23.2582C16.8322 23.2496 18.0568 23.1805 18.821 22.5754C19.7142 21.8754 21.749 21.0024 24.0325 22.4285C24.1062 22.4804 24.2075 22.3853 24.1522 22.3161C23.2039 21.0197 20.3679 16.8624 21.5649 14.9264C21.5833 14.9004 21.6201 14.8831 21.657 14.8918C22.2463 15.0041 27.0987 15.7561 27.2736 10.069C27.2736 9.99982 27.1908 9.96525 27.1355 9.99982C26.8409 10.2159 26.1319 10.6567 25.3308 10.674C24.2996 10.6913 21.4268 10.4752 21.0493 13.2755C21.0401 13.3447 21.1229 13.3879 21.1782 13.3533C21.5741 13.1113 22.7251 12.4804 23.9773 12.3075C24.0786 12.2902 24.1154 12.4285 24.0141 12.4631C23.0197 12.7915 21.2426 13.5867 20.4139 15.2202C20.3863 15.2807 20.2942 15.2807 20.2666 15.2289C20.0641 14.9004 19.4195 14.1139 17.8726 13.8546C17.7806 13.8373 17.7345 13.9583 17.8174 14.0015C18.3975 14.3041 19.3827 14.9091 19.6865 15.661C19.705 15.7129 19.6681 15.7647 19.6129 15.7734C18.9407 15.8079 15.4879 15.8252 15.8101 12.5236C15.8193 12.4544 15.9114 12.4285 15.9575 12.4717C16.1324 12.6532 16.4915 12.9385 16.9887 12.9557C17.6793 12.9903 19.1341 12.7656 20.0733 13.8892C20.1285 13.9497 20.2298 13.9151 20.2298 13.8373C20.1101 12.2038 20.0825 4.20899 31.3894 4.78807Z" fill="currentColor"/>
+              </svg>
+              <span class="d-powered-word" id="dPoweredWord">Lifespan</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <button class="d-collapse-btn" id="dCollapseBtn" type="button" aria-label="Toggle sidebar">
+        <span class="d-collapse-bar d-collapse-bar-1"></span>
+        <span class="d-collapse-bar d-collapse-bar-2"></span>
+      </button>
+
+      <main class="d-main" id="dMain">
+        <div class="d-view active" id="d-dashboard">
+          <header class="d-header">
+            <h1>Hi Morgan Ellis</h1>
+            <p>Here's how your program is doing</p>
+          </header>
+
+          <div class="d-tabs" role="tablist">
+            <button class="d-tab active" type="button" role="tab" data-dtab="overview">Overview</button>
+            <button class="d-tab" type="button" role="tab" data-dtab="wellness">Wellness Score</button>
+            <button class="d-tab" type="button" role="tab" data-dtab="burnout">Burnout</button>
+            <button class="d-tab" type="button" role="tab" data-dtab="sleep">Sleep</button>
+          </div>
+
+          <div class="d-filters">
+            <div class="d-pill-wrap">
+              <button class="d-pill" type="button" id="dPgyBtn" aria-haspopup="true" aria-expanded="false">
+                <span id="dPgyLabel">All PGY Levels</span><i data-icon="chevron-down" data-icon-class="sm"></i>
+              </button>
+              <div class="d-dropdown" id="dPgyMenu" role="menu"></div>
+            </div>
+            <div class="d-pill-wrap">
+              <button class="d-pill" type="button" id="dFromBtn">
+                <span id="dFromLabel">From: Month</span><i data-icon="calendar" data-icon-class="sm"></i>
+              </button>
+            </div>
+            <div class="d-pill-wrap">
+              <button class="d-pill" type="button" id="dToBtn">
+                <span id="dToLabel">To: Month</span><i data-icon="calendar" data-icon-class="sm"></i>
+              </button>
+            </div>
+            <div class="d-pill-wrap">
+              <button class="d-pill" type="button" id="dMonthBtn" aria-haspopup="true" aria-expanded="false">
+                <span id="dMonthLabel">May 2024</span><i data-icon="chevron-down" data-icon-class="sm"></i>
+              </button>
+              <div class="d-dropdown" id="dMonthMenu" role="menu"></div>
+            </div>
+          </div>
+
+          <div class="d-tab-panel active" id="d-tab-overview">
+            <section class="d-grid" id="dOverviewGrid"></section>
+          </div>
+
+          <div class="d-tab-panel" id="d-tab-wellness">
+            <section class="d-section">
+              <div class="d-section-head"><h3>Wellness Score</h3><i data-icon="info" data-icon-class="info"></i></div>
+              <section class="d-grid" id="dWellnessGrid"></section>
+            </section>
+            <section class="d-answers-card">
+              <p class="d-answers-title">Resident answers</p>
+              <div id="dWellnessAnswers"></div>
+            </section>
+          </div>
+
+          <div class="d-tab-panel" id="d-tab-burnout">
+            <section class="d-section">
+              <div class="d-section-head"><h3>Internal Burnout</h3><i data-icon="info" data-icon-class="info"></i></div>
+              <section class="d-grid" id="dBurnoutInternalGrid"></section>
+            </section>
+            <section class="d-answers-card">
+              <p class="d-answers-title">Resident answers</p>
+              <div id="dBurnoutInternalAnswers"></div>
+            </section>
+            <section class="d-section">
+              <div class="d-section-head"><h3>External Burnout</h3><i data-icon="info" data-icon-class="info"></i></div>
+              <section class="d-grid" id="dBurnoutExternalGrid"></section>
+            </section>
+            <section class="d-answers-card">
+              <p class="d-answers-title">Resident answers</p>
+              <div id="dBurnoutExternalAnswers"></div>
+            </section>
+            <section class="d-section">
+              <div class="d-section-head"><h3>Internal and External Burnout</h3></div>
+              <section class="d-grid d-grid-combined" id="dBurnoutCombinedGrid"></section>
+            </section>
+          </div>
+
+          <div class="d-tab-panel" id="d-tab-sleep">
+            <section class="d-section">
+              <div class="d-section-head"><h3>Sleep Quality</h3><i data-icon="info" data-icon-class="info"></i></div>
+              <section class="d-grid" id="dSleepQualityGrid"></section>
+            </section>
+            <section class="d-section">
+              <div class="d-section-head"><h3>Sleep Quantity</h3><i data-icon="info" data-icon-class="info"></i></div>
+              <section class="d-grid" id="dSleepQuantityGrid"></section>
+            </section>
+          </div>
+        </div>
+
+        <div class="d-view" id="d-program">
+          <header class="d-header"><h1>Program</h1><p>Manage your residency program roster</p></header>
+          <div class="d-empty-state">
+            <i data-icon="building-2" data-icon-class="info"></i>
+            <p>Program roster management isn't included in this prototype.</p>
+          </div>
+        </div>
+
+        <div class="d-view" id="d-questionnaires">
+          <header class="d-header"><h1>Questionnaires</h1><p>Build and send wellness questionnaires</p></header>
+          <div class="d-empty-state">
+            <i data-icon="book-open-check" data-icon-class="info"></i>
+            <p>Questionnaire building isn't included in this prototype.</p>
+          </div>
+        </div>
+
+        <div class="d-view" id="d-assessments">
+          <header class="d-header"><h1>Assessments</h1><p>Review scheduled and completed assessments</p></header>
+          <div class="d-empty-state">
+            <i data-icon="list-checks" data-icon-class="info"></i>
+            <p>Assessment management isn't included in this prototype.</p>
+          </div>
+        </div>
+
+        <div class="d-view" id="d-settings">
+          <header class="d-header"><h1>Settings</h1><p>Account and program preferences</p></header>
+          <div class="d-empty-state">
+            <i data-icon="settings" data-icon-class="info"></i>
+            <p>Settings isn't included in this prototype.</p>
+          </div>
+        </div>
+      </main>
     </div>
 
     <script src="assets/icons.js"></script>

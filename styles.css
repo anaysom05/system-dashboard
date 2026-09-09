@@ -1568,9 +1568,22 @@ td .ico {
 .chat-suggestions {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  max-height: 168px;
+  overflow-y: auto;
   margin: 10px 0 2px;
+  padding-right: 2px;
+}
+
+.chat-suggestions::-webkit-scrollbar {
+  width: 5px;
+}
+
+.chat-suggestions::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 20px;
 }
 
 .chat-chip {

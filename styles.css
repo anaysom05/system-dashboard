@@ -73,29 +73,13 @@ select {
 }
 
 .brand {
-  height: 70px;
+  padding: 6px 0 16px;
   text-align: center;
 }
 
-.mark {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-}
-
-.brand-mark {
-  width: 19px;
-  height: 19px;
-  margin-left: 1px;
-  color: #2cc36b;
-  vertical-align: -3px;
-}
-
-.brand p {
-  margin: 5px 0 0;
-  color: #cdeae8;
-  font-size: 9px;
-  line-height: 1.35;
+.brand-logo-img {
+  width: 128px;
+  height: auto;
 }
 
 .nav {
@@ -1874,26 +1858,9 @@ footer {
   text-align: center;
 }
 
-.login-brand .mark {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: -0.2px;
-}
-
-.login-brand .mark .brand-mark {
-  width: 19px;
-  height: 19px;
-  margin-left: 1px;
-  color: #2cc36b;
-  vertical-align: -2px;
-}
-
-.login-brand p {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
+.login-brand-img {
+  width: 220px;
+  height: auto;
 }
 
 .login-card h1 {
@@ -2109,6 +2076,12 @@ footer {
   color: var(--d-brand);
   overflow: hidden;
   transition: opacity 0.2s ease;
+}
+
+.d-brand-word-img {
+  width: 118px;
+  height: auto;
+  display: block;
 }
 
 .d-side.collapsed .d-brand-word {

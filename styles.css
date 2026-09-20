@@ -2065,27 +2065,25 @@ footer {
   margin-bottom: 24px;
 }
 
-.d-brand-mark {
-  width: 22px;
-  height: 17px;
-  flex: 0 0 auto;
-  color: var(--d-brand);
-}
-
 .d-brand-word {
   color: var(--d-brand);
   overflow: hidden;
-  transition: opacity 0.2s ease;
+  transition: width 0.2s ease;
 }
 
 .d-brand-word-img {
   width: 118px;
   height: auto;
   display: block;
+  transition: width 0.2s ease;
 }
 
 .d-side.collapsed .d-brand-word {
-  display: none;
+  width: 32px;
+}
+
+.d-side.collapsed .d-brand-word-img {
+  width: 32px;
 }
 
 .d-nav {
